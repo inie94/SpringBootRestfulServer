@@ -14,15 +14,17 @@
                 <div class="row justify-content-center align-self-center ">
                     <form class="col-md-4" th:action="@{/authenticateTheUser}" method="post">
                         <div class="form-floating">
-
                             <div class="input-group mb-3">
                                 <input type="search" class="form-control" name="username" id="email" placeholder="Email" onkeyup="checkForm()">
                             </div>
                             <div class="input-group mb-3">
                                 <input type="search" class="form-control" name="password" id="password" placeholder="Password" onkeyup="checkForm()">
                             </div>
-                            <div class="d-grid gap-2">
+                            <div class="d-grid mb-3">
                                 <input class="btn btn-primary btn" type="submit" value="Submit">
+                            </div>
+                            <div class="d-grid">
+                                <a href="/register" class="btn btn-outline-primary" role="button" >Registration</a>
                             </div>
                         </div>
                     </form>

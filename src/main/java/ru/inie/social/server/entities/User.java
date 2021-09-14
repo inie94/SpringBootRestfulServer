@@ -32,12 +32,12 @@ public class User {
 //    @Size(min = 6, max = 12, message = "Password should be between 6 and 12 characters")
     private String password;
 
-//    @ManyToMany
+    @ManyToMany
 //    @JoinTable(
 //            name = "subscriber_channels",
 //            joinColumns = {@JoinColumn(name = "channels_id")}
 //    )
-//    private Set<Topic> channels;
+    private Set<Topic> channels;
 
 //    @Column(name = "group_id")
 //    private String groupId;

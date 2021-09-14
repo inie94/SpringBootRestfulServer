@@ -2,6 +2,7 @@ package ru.inie.social.server.entities;
 
 public class ChatMessage {
     private MessageType type;
+    private Topic topic;
     private String content;
     private String sender;
 
@@ -17,6 +18,14 @@ public class ChatMessage {
 
     public void setType(MessageType type) {
         this.type = type;
+    }
+
+    public Topic getTopic() {
+        return topic;
+    }
+
+    public void setTopic(Topic topic) {
+        this.topic = topic;
     }
 
     public String getContent() {

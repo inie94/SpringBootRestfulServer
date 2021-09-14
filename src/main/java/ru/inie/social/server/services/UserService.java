@@ -8,6 +8,7 @@ import ru.inie.social.server.repositories.UserRepository;
 import ru.inie.social.server.security.UserRepresentation;
 
 import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -97,4 +98,15 @@ public class UserService {
 
         repository.save(user);
     }
+
+    public List<User> searchUsersBy(String searchValue) {
+//        return repository.findAllByEmailOrFirstnameOrLastnameIsStartingWith(searchValue);
+        Set<User> userSet = new HashSet<>();
+        userSet.addAll(repository.findAllByEmailStartsWithIgnoreCase(searchValue));
+        userSet.addAll(repository.findAllByFirstnameStartsWithIgnoreCase(searchValue));
+        userSet.addAll(repository.findAllByLastnameStartsWithIgnoreCase(searchValue));
+        return new ArrayList<>(userSet);
+//        return repository.findAllByEmailStartsWith(searchValue);
+    }
+
 }
