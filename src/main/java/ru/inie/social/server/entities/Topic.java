@@ -18,10 +18,6 @@ public class Topic {
     private TopicStatus status;
 
     @ManyToMany
-//    @JoinTable(
-//            name = "user_subscriptions",
-//            joinColumns = {@JoinColumn(name = "channel_id")}
-//    )
     private Set<User> subscriber;
 
     @ManyToOne

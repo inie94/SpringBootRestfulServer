@@ -34,7 +34,7 @@ public class UserMovesController {
         return userService.searchUsersBy(searchValue);
     }
 
-    @GetMapping("/user/id:{id}/connect")
+    @GetMapping("/user/id:{id}/get-topic")
     public Topic connectToUserTopic(@PathVariable("id") long id,
                                    Principal principal) {
         User user = userService.findByEmail(principal.getName());
@@ -54,5 +54,11 @@ public class UserMovesController {
         } else {
             return topics.stream().filter(item -> item.getSubscriber().contains(companion)).findFirst().get();
         }
+    }
+
+    @GetMapping("/user/topics")
+    public Set<Topic> getAllUserTopics(Principal principal) {
+        User user = userService.findByEmail(principal.getName());
+        return topicService.getTopicsBySubscriber(user);
     }
 }

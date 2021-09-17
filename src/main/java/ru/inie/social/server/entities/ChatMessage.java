@@ -2,7 +2,7 @@ package ru.inie.social.server.entities;
 
 public class ChatMessage {
     private MessageType type;
-    private Topic topic;
+    private Long topicId;
     private String content;
     private String sender;
 
@@ -20,12 +20,12 @@ public class ChatMessage {
         this.type = type;
     }
 
-    public Topic getTopic() {
-        return topic;
+    public long getTopicId() {
+        return topicId;
     }
 
-    public void setTopic(Topic topic) {
-        this.topic = topic;
+    public void setTopicId(Long topicId) {
+        this.topicId = topicId;
     }
 
     public String getContent() {
