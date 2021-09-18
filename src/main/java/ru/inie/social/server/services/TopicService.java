@@ -19,6 +19,10 @@ public class TopicService {
         this.repository = repository;
     }
 
+    public Topic findById(Long id) {
+        return repository.findById(id).get();
+    }
+
     public Set<Topic> getTopicsBySubscriber(User subscriber) {
         return new HashSet<>(repository.findAllBySubscriber(subscriber));
     }

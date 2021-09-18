@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.inie.social.server.entities.User;
+import ru.inie.social.server.entities.enums.UserStatus;
 import ru.inie.social.server.security.UserRepresentation;
 import ru.inie.social.server.services.UserService;
 import org.springframework.stereotype.Controller;
@@ -24,7 +25,13 @@ public class UserController {
 
     @GetMapping("/user")
     public User getAuthorizedUser(Principal principal) {
-        return service.findByEmail(principal.getName());
+        User user = service.findByEmail(principal.getName());
+        System.out.println(user);
+        if (user.getStatus() == null || user.getStatus().equals(UserStatus.OFFLINE)) {
+            user.setStatus(UserStatus.ONLINE);
+            service.save(user);
+        }
+        return user;
     }
 
 //    @GetMapping("/user/edit")

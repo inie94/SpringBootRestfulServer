@@ -1,7 +1,11 @@
 package ru.inie.social.server.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import ru.inie.social.server.entities.enums.UserStatus;
+
 import javax.persistence.*;
 import java.sql.Date;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -33,12 +37,15 @@ public class User {
     private String password;
 
     @ManyToMany
+    @JsonIgnore
 //    @JoinTable(
 //            name = "subscriber_channels",
 //            joinColumns = {@JoinColumn(name = "channels_id")}
 //    )
     private Set<Topic> channels;
 
+    @Column
+    private UserStatus status;
 //    @Column(name = "group_id")
 //    private String groupId;
 
@@ -122,5 +129,49 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Set<Topic> getChannels() {
+        return channels;
+    }
+
+    public void setChannels(Set<Topic> channels) {
+        this.channels = channels;
+    }
+
+    public UserStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(UserStatus status) {
+        this.status = status;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(id, user.id) && Objects.equals(firstname, user.firstname) && Objects.equals(lastname, user.lastname) && Objects.equals(email, user.email) && Objects.equals(gender, user.gender) && Objects.equals(dateOfBirth, user.dateOfBirth) && Objects.equals(password, user.password) && Objects.equals(channels, user.channels) && status == user.status;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, firstname, lastname, email, gender, dateOfBirth, password, channels, status);
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", firstname='" + firstname + '\'' +
+                ", lastname='" + lastname + '\'' +
+                ", email='" + email + '\'' +
+                ", gender='" + gender + '\'' +
+                ", dateOfBirth=" + dateOfBirth +
+                ", password='" + password + '\'' +
+                ", channels=" + channels +
+                ", status=" + status +
+                '}';
     }
 }

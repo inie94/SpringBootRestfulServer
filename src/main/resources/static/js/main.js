@@ -7,8 +7,11 @@ var scrollChatBody = document.querySelector('#scroll-content-body');
 let messages = [];
 
 var subscriptions = [];
+var loadedTopics = [];
 
-var chat = document.querySelector('#content-bock');
+var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+var chat = document.querySelector('#content-block');
 var chatHeader = document.querySelector('#content-header');
 var chatBody = document.querySelector('#content-body');
 var messageForm = document.querySelector('#message-form');
@@ -16,8 +19,9 @@ var messageInput = document.querySelector('#message');
 
 var connectingElement = document.querySelector('#content-body');
 var stompClient = null;
-//var username = 'josh';
-var currentTopicID;
+var dateBreakpoint = [];
+var currentTopic;
+
 var searchReturned;
 var searchInput = document.querySelector('#searchInput');
 
@@ -27,8 +31,6 @@ var colors = [
 ];
 
 function initialization() {
-    console.log('Initialization is started!');
-
     fetch('/user')
         .then(response => response.json())
         .then(data => {
@@ -51,8 +53,8 @@ function onConnected() {
         {},
         JSON.stringify({
             type: 'JOIN',
-            topicId: 0,
-            sender: authorizedUser.firstname,
+            topic: null,
+            sender: authorizedUser,
             content: authorizedUser.id
         })
     )
@@ -60,18 +62,73 @@ function onConnected() {
     fetch('/user/topics')
         .then(response => response.json())
         .then(data => {
-            userTopics = data;
             data.forEach(item => {
+                loadedTopics[item.id] = item;
                 messages[item.id] = '';
-                subscribeOnTopic(item.id)
+                fetch('/user/topic/id:'+ item.id + '/messages')
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(message => {
+                                chekOnNewDate(item.id, message.createdBy);
+                                messages[item.id] += createMessageContainer(message);
+                            });
+                        });
+                subscribeOnTopic(item.id);
             });
             viewUserTopics(data);
         });
 }
 
+function createMessageContainer(message) {
+    var element = '';
+
+    if (message.sender.id === authorizedUser.id) {
+        element += '<div class="d-flex justify-content-end mb-3">';
+    } else {
+        element += '<div class="d-flex justify-content-start mb-3">';
+    }
+    var date = new Date(message.createdBy);
+    return element +  '<div class="card col-8 ">' +
+                          '<div class="card-body py-2">' +
+                              '<div>' + message.content + '</div>' +
+                              '<div class="text-end text-muted">' +
+                                date.getHours() + ':' + date.getMinutes() +
+                              '</div>' +
+                          '</div>' +
+                      '</div>' +
+                  '</div>';
+}
+
+function createDateBreakpoint(date) {
+    return '<div class="d-flex justify-content-center mb-3">' +
+               '<div class="card border-light bg-transparent">' +
+                   '<div class="card-body py-2">' +
+                       '<div class="text-light">' +
+                           date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() +
+                       '</div>' +
+                   '</div>' +
+               '</div>' +
+           '</div>';
+}
+
+function chekOnNewDate(topicId, message_date) {
+    var date = new Date(message_date);
+    if (dateBreakpoint[topicId] === undefined) {
+        messages[topicId] += createDateBreakpoint(date);
+    } else {
+        if ((date.getFullYear() != dateBreakpoint[topicId].getFullYear()) ||
+            (date.getMonth() != dateBreakpoint[topicId].getMonth()) ||
+            (date.getDate() != dateBreakpoint[topicId].getDate()))  {
+
+            messages[topicId] += createDateBreakpoint(date);
+        }
+    }
+    dateBreakpoint[topicId] = date;
+}
+
 function viewUserTopics(topics) {
     var element = '';
-    topics.forEach( topic => {
+    topics.forEach(topic => {
         if (topic.status === 'PRIVATE') {
             topic.subscriber.forEach( subscriber => {
                 if (subscriber.id !== authorizedUser.id) {
@@ -92,12 +149,16 @@ function generateUserCard(user, topic) {
     } else {
         element = '<button onclick="preparingToConnect(' + topic.id + ')" type="button" class="btn btn-dark p-3 container-fluid">';
     }
-    return element +
+    element +=
         '<div class="row align-items-center">' +
             '<div class="col-3 p-0 d-flex justify-content-center">' +
-                '<div class="col-">' +
-                  '<span id="user-' + user.id + '" class="position-absolute p-2 bg-success border border-light rounded-circle invisible"></span>' +
-                '</div>' +
+                '<div class="col-">';
+    if (user.status === 'ONLINE') {
+        element += '<span id="user-' + user.id + '" class="position-absolute p-2 bg-success border border-light rounded-circle"></span>';
+    } else {
+        element += '<span id="user-' + user.id + '" class="position-absolute p-2 bg-success border border-light rounded-circle invisible"></span>';
+    }
+    return element += '</div>' +
                 '<img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"' +
                      'class="img-fluid rounded-circle border border-light"' +
                      'alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"' +
@@ -119,29 +180,29 @@ function getTopicFromUserID(id) {
     fetch('/user/id:' + id + '/get-topic')
         .then(response => response.json())
         .then(data => {
+            loadedTopics[data.id] = data;
             preparingToConnect(data.id);
         });
 }
 
 function preparingToConnect(topicId) {
     clearSearchInput();
-    currentTopicID = topicId; // проверить необходимость
-    if (subscriptions.indexOf(topicId) === -1) {
+    chat.classList.remove('invisible');
+
+    currentTopic = loadedTopics[topicId];
+
+    if (subscriptions[topicId] !== true) {
         messages[topicId] = '';
         subscribeOnTopic(topicId);
     }
 
-    userTopics.forEach(topic => {
-        if (topic.id === topicId) {
-            topic.subscriber.forEach(subscriber => {
-                if(subscriber.id !== authorizedUser.id) {
-                    chatHeader.innerHTML = subscriber.firstname + ' ' + subscriber.lastname;
-                }
-            });
+    currentTopic.subscriber.forEach(subscriber => {
+        if(subscriber.id !== authorizedUser.id) {
+            chatHeader.innerHTML = subscriber.firstname + ' ' + subscriber.lastname;
         }
     });
 
-    reloadChatBody(messages[topicId], topicId);
+    reloadChatBody(messages[topicId], currentTopic);
 }
 
 function clearSearchInput() {
@@ -154,11 +215,11 @@ function clearSearchInput() {
         });
 }
 
-function subscribeOnTopic(topicID) {
-    // Add topic id to subscriptions array
-    subscriptions[subscriptions.length] = topicID;
+function subscribeOnTopic(topicId) {
     // Subscribe to the Topic
-    stompClient.subscribe(('/topic/id:' + topicID), onMessageReceived);
+    stompClient.subscribe(('/topic/id:' + topicId), onMessageReceived);
+    // Add subscribe on topic to subscriptions
+    subscriptions[topicId] = true;
 }
 
 function onError(error) {
@@ -169,10 +230,11 @@ function sendMessage(event) {
     var messageContent = messageInput.value.trim();
     if(messageContent && stompClient) {
         var chatMessage = {
-            topicId: currentTopicID,
-            sender: authorizedUser.firstname,
+            topic: currentTopic,
+            sender: authorizedUser,
             content: messageInput.value,
-            type: 'CHAT'
+            type: 'CHAT',
+            createdBy: new Date()
         };
         stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
         messageInput.value = '';
@@ -182,29 +244,22 @@ function sendMessage(event) {
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
     if(message.type === 'JOIN') {
-        console.log(message.sender + ' joined!');
-
-        document.querySelector('#user-' + message.content).classList.remove('invisible');
+        if(message.sender.id !== authorizedUser.id) {
+            document.querySelector('#user-' + message.sender.id).classList.remove('invisible');
+        }
     } else if (message.type === 'LEAVE') {
-        console.log(message.sender + ' left!');
+        if(message.sender.id !== authorizedUser.id) {
+            document.querySelector('#user-' + message.sender.id).classList.add('invisible');
+        }
     } else {
-        var joinMessage = '<div class="row- py-2">' +
-                                             '<div class="card text-dark bg-light" >' +
-                                                 '<div class="card-header">' + message.sender + '</div>' +
-                                                 '<div class="card-body">' +
-                                                     '<p class="card-text">' +
-                                                         message.content +
-                                                     '</p>' +
-                                                 '</div>' +
-                                             '</div>' +
-                                         '</div>';
-        messages[message.topicId] += joinMessage;
-        reloadChatBody(messages[message.topicId], message.topicId);
+        chekOnNewDate(message.topic.id, message.createdBy);
+        messages[message.topic.id] += createMessageContainer(message);
+        reloadChatBody(messages[message.topic.id], message.topic);
     }
 }
 
-function reloadChatBody(messagesCurr, topicID) {
-    if (topicID === currentTopicID) {
+function reloadChatBody(messagesCurr, topic) {
+    if (topic.id === currentTopic.id) {
         chatBody.innerHTML = messagesCurr;
         scrollChatBody.scrollTop = scrollChatBody.scrollHeight;
     }
@@ -258,7 +313,5 @@ searchInput.oninput = function(event) {
             chatsList.innerHTML = '';
             search(searchInput.value);
         };
-
-
 
 messageForm.addEventListener('submit', sendMessage, true);

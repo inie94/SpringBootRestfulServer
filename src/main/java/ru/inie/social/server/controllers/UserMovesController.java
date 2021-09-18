@@ -61,4 +61,9 @@ public class UserMovesController {
         User user = userService.findByEmail(principal.getName());
         return topicService.getTopicsBySubscriber(user);
     }
+
+    @GetMapping("/user/topic:{id}")
+    public Topic getTopics(@PathVariable("id") long id) {
+        return topicService.findById(id);
+    }
 }
