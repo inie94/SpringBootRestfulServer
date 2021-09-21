@@ -8,8 +8,8 @@ import ru.inie.social.server.repositories.MessagesRepository;
 
 import javax.print.attribute.DateTimeSyntax;
 import javax.xml.crypto.Data;
-import java.sql.Date;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -27,6 +27,7 @@ public class MessagesService {
     }
 
     public List<Message> getLastMessages(Topic topic) {
-        return repository.findByTopicAndCreatedByBetweenOrderByCreatedByAsc(topic, new Date(new java.util.Date().getTime() - (2 * 24 * 60 * 60 * 1000)), new Date(new java.util.Date().getTime()));
+        Long moment = new Date().getTime();
+        return repository.findByTopicAndCreatedByAfterOrderByCreatedByAsc(topic, moment - (2 * 24 * 60 * 60 * 1000));
     }
 }

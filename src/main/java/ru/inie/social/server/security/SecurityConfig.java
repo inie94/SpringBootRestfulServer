@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 @EnableWebSecurity
 @Configuration
@@ -60,7 +62,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .antMatchers("/login").permitAll()
                 .antMatchers("/register").permitAll()
-                .antMatchers("/authenticateTheUser").permitAll()
+//                .antMatchers("/authenticateTheUser").permitAll()
                 .antMatchers("/**").authenticated()
                 .and()
                 .formLogin()
@@ -68,8 +70,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .loginProcessingUrl("/authenticateTheUser")
                 .defaultSuccessUrl("/", true)
                 .and()
+                .csrf()
+//                .csrfTokenRepository(csrfTokenRepository())
+                .ignoringAntMatchers("/logout")
+                .and()
                 .logout()
                 .logoutSuccessUrl("/login")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll();
     }
 
@@ -81,4 +89,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         return authenticationProvider;
     }
+
+////    @Bean
+//    private CsrfTokenRepository csrfTokenRepository() {
+//        HttpSessionCsrfTokenRepository repository = new HttpSessionCsrfTokenRepository();
+//        repository.setSessionAttributeName("_csrf");
+//        return repository;
+//    }
 }

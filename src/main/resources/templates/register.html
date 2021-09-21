@@ -5,6 +5,8 @@
               rel="stylesheet"
               integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We"
               crossorigin="anonymous">
+
+        <link rel="stylesheet" href="static/css/bootstrap-datepicker3.min.css">
         <meta charset="UTF-8">
         <title>Registration</title>
     </head>
@@ -35,8 +37,10 @@
                                 <div class="input-group mb-3">
                                     <input type="search" class="form-control" id="repeatPassword" th:field="*{repeatPassword}" placeholder="Repeat password">
                                 </div>
-                                <div class="input-group mb-3">
-                                    <input type="search" class="form-control" id="dateOfBirth" th:field="*{dateOfBirth}"  placeholder="Date of birth">
+                                <div class="input-group mb-3" >
+<!--                                    <input type="search" class="form-control" id="dateOfBirth" th:field="*{dateOfBirth}"  placeholder="Date of birth">-->
+                                    <input type="date" class="form-control" id="dateOfBirth" th:field="*{dateOfBirth}" value="1994-01-01">
+
                                 </div>
                                 <div class="d-grid gap-2">
                                     <input class="btn btn-primary btn" type="submit" value="Submit">
@@ -46,6 +50,17 @@
                     </div>
                 </div>
             </div>
-    
+
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+            <script src="static/js/bootstrap-datepicker.min.js"></script>
+            <script src="static/js/bootstrap-datepicker.ru.min.js"></script>
+            <script>
+                $('#sandbox-container .input-group.date').datepicker({
+                    format: "dd-mm-yyyy",
+                    autoclose: true,
+                    todayHighlight: true
+                });
+            </script>
     </body>
 </html>

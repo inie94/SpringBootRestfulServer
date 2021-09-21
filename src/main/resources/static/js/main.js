@@ -3,6 +3,7 @@ var authorizedUser = null;
 var userTopics = null;
 var chatsList = document.querySelector('#chats-list');
 var scrollChatBody = document.querySelector('#scroll-content-body');
+var logoutForm = document.querySelector('#logout-form');
 
 let messages = [];
 
@@ -24,6 +25,9 @@ var currentTopic;
 
 var searchReturned;
 var searchInput = document.querySelector('#searchInput');
+
+var csrfToken = document.querySelector('#csrf').getAttribute('content');
+var csrfHeader = document.querySelector('#csrf_header').getAttribute('content');
 
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
@@ -75,6 +79,7 @@ function onConnected() {
                         });
                 subscribeOnTopic(item.id);
             });
+            console.log(data);
             viewUserTopics(data);
         });
 }
@@ -168,9 +173,19 @@ function generateUserCard(user, topic) {
                 '<h6 align="left" class="card-title text-white">' +
                     user.firstname + ' ' + user.lastname +
                 '</h6>' +
-                '<p align="left" class="card-text text-white text-muted text-truncate">' +
-                    user.email +
-                '</p>' +
+                '<div class="row">' +
+                    '<div class="col-9">' +
+                        '<p align="left" class="card-text text-white text-muted text-truncate">' +
+                            user.email +
+                        '</p>' +
+                    '</div>' +
+                    '<div class="col-3 invisible" id="span-container-user-' + user.id + '">' +
+                        '<span class="badge rounded-pill bg-danger" id="span-context-user-' + user.id + '">' +
+                            '99+' +
+                        '<span class="visually-hidden">unread messages</span>' +
+                        '</span>' +
+                    '</div>' +
+                '</div>' +
                 '</div>' +
             '</div>' +
         '</button>';
@@ -234,7 +249,7 @@ function sendMessage(event) {
             sender: authorizedUser,
             content: messageInput.value,
             type: 'CHAT',
-            createdBy: new Date()
+            createdBy: Date.now()
         };
         stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
         messageInput.value = '';
@@ -282,16 +297,37 @@ function search(text) {
                 viewUserTopics(data);
             });
     } else {
+        var element = '';
+        element += searchIntoLoadedTopics(text);
         fetch('/search?value=' + text)
             .then(response => response.json())
             .then(data => {
-                var element = searchHeader('Global search result: ');
+                element += searchHeader('Global search result: ');
                 data.forEach( item => {
                     element += generateUserCard(item, null);
                 });
                 chatsList.innerHTML = element;
             });
     }
+}
+
+function searchIntoLoadedTopics(text) {
+    var element = ''
+    loadedTopics.forEach(topic => {
+        if (topic.status === 'PRIVATE') {
+            topic.subscriber.forEach(subscriber => {
+                if(subscriber.id !== authorizedUser.id) {
+                    if (subscriber.email.startsWith(text) ||
+                        subscriber.firstname.startsWith(text)  ||
+                        subscriber.lastname.startsWith(text) ) {
+
+                        element += generateUserCard(subscriber, topic);
+                    }
+                }
+            });
+        }
+    });
+    return element;
 }
 
 function searchHeader(headerText) {
@@ -302,7 +338,32 @@ function searchHeader(headerText) {
            '</div>';
 }
 
+function logout(event) {
+    fetch('/logout', {
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        headers: {
+            [csrfHeader] : csrfToken,
+            'charset': 'UTF-8',
+            'Content-Type': 'application/json',
+        },
+        redirect: 'follow', // manual, *follow, error
+    })
+    .then(response => {
+            // HTTP 301 response
+            // HOW CAN I FOLLOW THE HTTP REDIRECT RESPONSE?
+            if (response.redirected) {
+                window.location.href = response.url;
+            }
+        })
+    .catch(function(err) {
+        console.info(err + " url: " + url);
+    });
+}
+
+
 initialization.call();
+
+
 
 searchInput.onkeydown = function(event) {
             if (event.keyCode == 27 || event.key == 27) {

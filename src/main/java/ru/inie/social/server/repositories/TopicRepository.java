@@ -13,6 +13,6 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
 
     Optional<Topic> findById(Long id);
 
-    List<Topic> findAllBySubscriber(User subscriber);
+    List<Topic> findAllBySubscribers(User subscriber);
 
 }

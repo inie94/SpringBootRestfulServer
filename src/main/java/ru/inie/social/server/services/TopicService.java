@@ -24,7 +24,7 @@ public class TopicService {
     }
 
     public Set<Topic> getTopicsBySubscriber(User subscriber) {
-        return new HashSet<>(repository.findAllBySubscriber(subscriber));
+        return new HashSet<>(repository.findAllBySubscribers(subscriber));
     }
 
     public void create(Topic topic) {

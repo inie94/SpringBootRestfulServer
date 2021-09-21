@@ -12,10 +12,7 @@ import ru.inie.social.server.services.TopicService;
 import ru.inie.social.server.services.UserService;
 
 import java.security.Principal;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 public class UserMovesController {
@@ -30,8 +27,30 @@ public class UserMovesController {
     }
 
     @GetMapping("/search")
-    public List<User> searchUsers(@RequestParam("value") String searchValue) {
-        return userService.searchUsersBy(searchValue);
+    public List<User> searchUsers(@RequestParam("value") String searchValue, Principal principal) {
+        User user = userService.findByEmail(principal.getName());
+
+        List<User> users = userService.searchUsersBy(searchValue);
+
+
+        user.getChannels().forEach(topic -> {
+            switch (topic.getStatus()) {
+                case PRIVATE:
+                    topic.getSubscriber().forEach(subscriber -> {
+                        if (subscriber.getId() != user.getId()) {
+                            if (subscriber.getEmail().startsWith(searchValue) ||
+                                    subscriber.getFirstname().startsWith(searchValue) ||
+                                    subscriber.getLastname().startsWith(searchValue)) {
+                                users.remove(subscriber);
+                            }
+                        }
+                    });
+                    break;
+                case PUBIC:
+            }
+        });
+        users.remove(user);
+        return users;
     }
 
     @GetMapping("/user/id:{id}/get-topic")

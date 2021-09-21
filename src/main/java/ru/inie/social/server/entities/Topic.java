@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
+@Table(name = "topics")
 public class Topic {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,13 +19,20 @@ public class Topic {
     private TopicStatus status;
 
     @ManyToMany
-    private Set<User> subscriber;
+    @JoinTable(
+            name = "topics_subscribers",
+            joinColumns = @JoinColumn(name = "topic_id"),
+            inverseJoinColumns = @JoinColumn(name = "subscribers_id")
+    )
+    private Set<User> subscribers;
 
     @ManyToOne
     @JoinColumn(name = "creator_id")
     private User creator;
 
-    @Column
+    @ManyToMany
+    private Set<User> unsubscribes;
+    
     private String name;
 
     public Topic() {
@@ -48,11 +56,11 @@ public class Topic {
     }
 
     public Set<User> getSubscriber() {
-        return subscriber;
+        return subscribers;
     }
 
-    public void setSubscriber(Set<User> subscriber) {
-        this.subscriber = subscriber;
+    public void setSubscriber(Set<User> subscribers) {
+        this.subscribers = subscribers;
     }
 
     public User getCreator() {
@@ -69,6 +77,22 @@ public class Topic {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Set<User> getSubscribers() {
+        return subscribers;
+    }
+
+    public void setSubscribers(Set<User> subscribers) {
+        this.subscribers = subscribers;
+    }
+
+    public Set<User> getUnsubscribes() {
+        return unsubscribes;
+    }
+
+    public void setUnsubscribes(Set<User> unsubscribes) {
+        this.unsubscribes = unsubscribes;
     }
 
     @Override
@@ -89,7 +113,9 @@ public class Topic {
         return "Topic{" +
                 "id=" + id +
                 ", status=" + status +
+                ", subscribers=" + subscribers +
                 ", creator=" + creator +
+                ", unsubscribes=" + unsubscribes +
                 ", name='" + name + '\'' +
                 '}';
     }

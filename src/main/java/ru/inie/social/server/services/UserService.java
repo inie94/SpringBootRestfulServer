@@ -31,7 +31,7 @@ public class UserService {
         user.setEmail(userRepresentation.getEmail());
         user.setGender(userRepresentation.getGender());
 
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         java.util.Date utilDate;
         java.sql.Date sqlDate;
 
@@ -60,36 +60,27 @@ public class UserService {
         return repository.findById(id).get();
     }
 
-    public void update (UserRepresentation userRepresentation, User user) {
+    public void update (User representation, User user) {
         String text;
-        if (!(text = userRepresentation.getFirstname()).equals("")) {
+        if ((text = representation.getFirstname()) != null) {
             user.setFirstname(text);
         }
-        if (!(text = userRepresentation.getLastname()).equals("")) {
+        if ((text = representation.getLastname()) != null) {
             user.setLastname(text);
         }
-        if (!(text = userRepresentation.getEmail()).equals("")) {
+        if ((text = representation.getEmail()) != null) {
             user.setEmail(text);
 
         }
-        if (!(text = userRepresentation.getGender()).equals("")) {
+        if ((text = representation.getGender()) != null) {
             user.setGender(text);
         }
 
-        if (!userRepresentation.getDateOfBirth().equals("")) {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
-            java.util.Date utilDate;
-            java.sql.Date sqlDate;
-            try {
-                utilDate = format.parse(userRepresentation.getDateOfBirth());
-                sqlDate = new java.sql.Date(utilDate.getTime());
-                user.setDateOfBirth(sqlDate);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if (representation.getDateOfBirth() != null) {
+            user.setDateOfBirth(representation.getDateOfBirth());
         }
 
-        if (!(text = userRepresentation.getPassword()).equals("")) {
+        if ((text = representation.getPassword()) != null) {
             user.setPassword(passwordEncoder.encode(text));
         }
 

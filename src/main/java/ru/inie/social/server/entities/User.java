@@ -15,65 +15,42 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "first_name")
+    @Column(name = "first_name",
+            nullable = false)
     private String firstname;
 
-    @Column(name = "last_name")
+    @Column(name = "last_name",
+            nullable = false)
     private String lastname;
 
-    @Column
+    @Column(nullable = false)
 //    @NotEmpty(message = "Email should not be empty")
 //    @Email(message = "Email should be valid")
     private String email;
 
-    @Column
+    @Column(nullable = false)
     private String gender;
 
-    @Column(name = "date_of_birth")
+    @Column(nullable = false)
     private Date dateOfBirth;
 
-    @Column
+    @Column(nullable = false)
 //    @Size(min = 6, max = 12, message = "Password should be between 6 and 12 characters")
     private String password;
 
     @ManyToMany
     @JsonIgnore
-//    @JoinTable(
-//            name = "subscriber_channels",
-//            joinColumns = {@JoinColumn(name = "channels_id")}
-//    )
+    @JoinTable(
+            name = "topics_subscribers",
+            joinColumns = @JoinColumn(name = "subscribers_id"),
+            inverseJoinColumns = @JoinColumn(name = "topic_id")
+    )
     private Set<Topic> channels;
 
-    @Column
+    @Column(nullable = false)
     private UserStatus status;
-//    @Column(name = "group_id")
-//    private String groupId;
-
-//    @ManyToMany
-//    @JoinTable(
-//            name = "user_subscriptions",
-//            joinColumns = {@JoinColumn(name = "channel_id")},
-//            inverseJoinColumns = {@JoinColumn(name = "subscriber_id")}
-//    )
-//    private Set<User> subscribers = new HashSet<>();
-//
-//    @ManyToMany
-//    @JoinTable(
-//            name = "user_subscriptions",
-//            joinColumns = {@JoinColumn(name = "subscriber_id")},
-//            inverseJoinColumns = {@JoinColumn(name = "channel_id")}
-//    )
-//    private Set<User> subscriptions = new HashSet<>();
-
-//    @OneToMany(
-//            mappedBy = "user",
-//            cascade = CascadeType.ALL,
-//            orphanRemoval = true
-//    )
-//    private List<Project> projects;
 
     public User() { }
-
 
     public Long getId() {
         return id;
@@ -152,12 +129,12 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(firstname, user.firstname) && Objects.equals(lastname, user.lastname) && Objects.equals(email, user.email) && Objects.equals(gender, user.gender) && Objects.equals(dateOfBirth, user.dateOfBirth) && Objects.equals(password, user.password) && Objects.equals(channels, user.channels) && status == user.status;
+        return Objects.equals(id, user.id) && Objects.equals(firstname, user.firstname) && Objects.equals(lastname, user.lastname) && Objects.equals(email, user.email) && Objects.equals(gender, user.gender) && Objects.equals(dateOfBirth, user.dateOfBirth) && Objects.equals(password, user.password);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, firstname, lastname, email, gender, dateOfBirth, password, channels, status);
+        return Objects.hash(id, firstname, lastname, email, gender, dateOfBirth, password);
     }
 
     @Override

@@ -23,13 +23,11 @@ public class LoginController {
         this.userService = userService;
     }
 
-//    @GetMapping("/")
-//    public String index(Model model,
-//                        Principal principal){
-//        User user = userService.findByEmail(principal.getName());
-//        model.addAttribute("authorizedUser", user);
-//        return "redirect:";
-//    }
+    @GetMapping()
+    public String index(Model model,
+                        Principal principal){
+        return "index";
+    }
 
     @GetMapping("/login")
     public String loginForm() {

@@ -9,25 +9,29 @@ import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
+@Table(name = "messages")
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Column(nullable = false)
     private MessageType type;
 
     @ManyToOne
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
+    @Column(nullable = false)
     private String content;
 
     @ManyToOne
     @JoinColumn(name = "sender_id")
     private User sender;
 
-    private Timestamp createdBy;
+    @Column(nullable = false)
+    private Long createdBy;
 
     public Message() {
     }
@@ -72,12 +76,12 @@ public class Message {
         this.sender = sender;
     }
 
-    public Timestamp getCreatedBy() {
+    public Long getCreatedBy() {
         return createdBy;
 
     }
 
-    public void setCreatedBy(Timestamp createdBy) {
+    public void setCreatedBy(Long createdBy) {
         this.createdBy = createdBy;
     }
 

@@ -47,23 +47,27 @@ public class UserController {
 //        return "redirect:/id" + authorizedUser.getId();
 //    }
 //
-//    @PostMapping("/edit-profile")
-//    public String editUser(Principal principal,
-//                           @ModelAttribute("user") UserRepresentation userRepresentation,
-//                           BindingResult bindingResult) {
-//        User authorizedUser = userService.findByEmail(principal.getName());
-//
-//        if (bindingResult.hasErrors())
-//            return "edit";
-//        if (!userRepresentation.getPassword().equals(userRepresentation.getRepeatPassword())) {
-//            bindingResult.rejectValue("password", "Пароли не совпадают");
-//            return "edit";
-//        }
-//
-//        userService.update(userRepresentation, authorizedUser);
-//
-//        return "redirect:/feed";
-//    }
+    @PostMapping("/edit-profile")
+    public void editUser(Principal principal,
+                         @RequestBody User representation) {
+
+        System.out.println(representation);
+
+        if (representation.getEmail() != null && service.findByEmail(representation.getEmail()) != null) {
+            /**
+             *  В БД есть пользователь с таким Email.
+             *  необходимо вернуть ответ в котором указывается что Email неправильный
+             */
+        }
+
+        /**
+         *  Записать измененные значения и сохранить в БД.
+         *  Необходимо переписать метод update в классе UserService
+         *  и изменить форму регистрации
+         */
+
+        service.update(representation, service.findByEmail(principal.getName()));
+    }
 
 
 //
