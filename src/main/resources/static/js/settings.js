@@ -68,6 +68,3 @@ function validPasswords() {
                         'aria-describedby="basic-addon3" placeholder="Repeat password">' +
              '</div>';
 }
-
-//profileForm.addEventListener('submit', updateProfile, true);
-//emailPasswordForm.addEventListener('submit', updateEmailOrPassword, true);

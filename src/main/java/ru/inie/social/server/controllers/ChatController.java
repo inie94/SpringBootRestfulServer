@@ -7,6 +7,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import ru.inie.social.server.dto.MessageDTO;
 import ru.inie.social.server.entities.Message;
 import ru.inie.social.server.services.MessagesService;
 
@@ -23,13 +24,13 @@ public class ChatController {
     }
 
     @MessageMapping("/chat.sendMessage")
-    public Message sendMessage(@Payload Message message) {
+    public MessageDTO sendMessage(@Payload MessageDTO message) {
         service.save(message);
         messagingTemplate.convertAndSend("/topic/id:" + message.getTopic().getId(), message);
         return message;
     }
 
-    @MessageMapping("/chat.addUser")
+    @MessageMapping("/chat.notification")
     @SendTo("/topic/notification")
     public Message addUser(@Payload Message message,
                            SimpMessageHeaderAccessor headerAccessor) {

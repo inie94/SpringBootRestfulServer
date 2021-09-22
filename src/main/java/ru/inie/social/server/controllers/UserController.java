@@ -5,14 +5,18 @@ import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import ru.inie.social.server.dto.UserDTO;
 import ru.inie.social.server.entities.User;
 import ru.inie.social.server.entities.enums.UserStatus;
 import ru.inie.social.server.security.UserRepresentation;
+import ru.inie.social.server.services.DTOService;
 import ru.inie.social.server.services.UserService;
 import org.springframework.stereotype.Controller;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.util.HashSet;
+import java.util.Set;
 
 @RestController
 public class UserController {
@@ -24,32 +28,17 @@ public class UserController {
     }
 
     @GetMapping("/user")
-    public User getAuthorizedUser(Principal principal) {
+    public UserDTO getAuthorizedUser(Principal principal) {
         User user = service.findByEmail(principal.getName());
-        System.out.println(user);
         if (user.getStatus() == null || user.getStatus().equals(UserStatus.OFFLINE)) {
             user.setStatus(UserStatus.ONLINE);
             service.save(user);
         }
-        return user;
+        return DTOService.toUserDTO(user);
     }
-
-//    @GetMapping("/user/edit")
-//    public String editPage(Principal principal,
-//                           Model model) {
-//
-//        User authorizedUser = service.findByEmail(principal.getName());
-//            model.addAttribute("user", new UserRepresentation());
-//            model.addAttribute("authorizedUser", authorizedUser);
-//            return "edit";
-//        }
-//
-//        return "redirect:/id" + authorizedUser.getId();
-//    }
-//
-    @PostMapping("/edit-profile")
+    @PostMapping("/user/edit-profile")
     public void editUser(Principal principal,
-                         @RequestBody User representation) {
+                         @RequestBody UserDTO representation) {
 
         System.out.println(representation);
 
@@ -76,4 +65,5 @@ public class UserController {
 //        CsrfToken csrf = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
 //        return csrf.getToken();
 //    }
+
 }

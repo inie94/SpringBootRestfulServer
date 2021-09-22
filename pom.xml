@@ -66,6 +66,11 @@
 			<artifactId>thymeleaf-spring5</artifactId>
 			<version>3.0.12.RELEASE</version>
 		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
 
 <!--		&lt;!&ndash; RabbitMQ Starter Dependency (Not required if you're using the simple in-memory broker for STOMP) &ndash;&gt;-->
 <!--		<dependency>-->
@@ -103,6 +108,14 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

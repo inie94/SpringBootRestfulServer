@@ -1,8 +1,10 @@
 package ru.inie.social.server.services;
 
+import org.dom4j.util.UserDataAttribute;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import ru.inie.social.server.dto.UserDTO;
 import ru.inie.social.server.entities.User;
 import ru.inie.social.server.entities.enums.UserStatus;
 import ru.inie.social.server.repositories.UserRepository;
@@ -60,7 +62,7 @@ public class UserService {
         return repository.findById(id).get();
     }
 
-    public void update (User representation, User user) {
+    public void update (UserDTO representation, User user) {
         String text;
         if ((text = representation.getFirstname()) != null) {
             user.setFirstname(text);

@@ -6,6 +6,7 @@ var scrollChatBody = document.querySelector('#scroll-content-body');
 var logoutForm = document.querySelector('#logout-form');
 
 let messages = [];
+var newMessages = []
 
 var subscriptions = [];
 var loadedTopics = [];
@@ -21,13 +22,15 @@ var messageInput = document.querySelector('#message');
 var connectingElement = document.querySelector('#content-body');
 var stompClient = null;
 var dateBreakpoint = [];
-var currentTopic;
+var currentTopic = null;
 
 var searchReturned;
 var searchInput = document.querySelector('#searchInput');
 
 var csrfToken = document.querySelector('#csrf').getAttribute('content');
 var csrfHeader = document.querySelector('#csrf_header').getAttribute('content');
+
+var chatsListViews;
 
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
@@ -53,7 +56,7 @@ function onConnected() {
     // Subscribe to the Notification Topic
     stompClient.subscribe('/topic/notification', onMessageReceived);
     // Tell your username to the server
-    stompClient.send("/app/chat.addUser",
+    stompClient.send("/app/chat.notification",
         {},
         JSON.stringify({
             type: 'JOIN',
@@ -63,25 +66,82 @@ function onConnected() {
         })
     )
 
-    fetch('/user/topics')
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(item => {
-                loadedTopics[item.id] = item;
-                messages[item.id] = '';
-                fetch('/user/topic/id:'+ item.id + '/messages')
-                        .then(response => response.json())
-                        .then(data => {
-                            data.forEach(message => {
-                                chekOnNewDate(item.id, message.createdBy);
-                                messages[item.id] += createMessageContainer(message);
-                            });
-                        });
-                subscribeOnTopic(item.id);
-            });
-            console.log(data);
-            viewUserTopics(data);
+    if (authorizedUser.channels) {
+        viewUserTopics();
+        authorizedUser.channels.forEach(channel => {
+            messages[channel.id] = '';
+            newMessages[channel.id] = 0;
+            subscribeOnTopic(channel.id);
+            fetch('/user/topic/id:'+ channel.id + '/messages')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(message => {
+                        chekOnNewDate(channel.id, message.createdBy);
+                        messages[channel.id] += createMessageContainer(message);
+                    });
+                });
         });
+    }
+}
+
+function viewUserTopics() {
+    var element = '';
+    authorizedUser.channels.sort(
+                function(a, b) {
+                    return b.updatedBy - a.updatedBy;
+                }
+            );
+    authorizedUser.channels.forEach(topic => {
+        if (topic.status === 'PRIVATE') {
+            element += generateTopicCard(topic);
+        } else {
+            /* View PUBLIC topics */
+        }
+    });
+    chatsListViews = element;
+    chatsList.innerHTML = chatsListViews;
+}
+
+function generateTopicCard(topic) {
+    var companion = topic.subscribers.filter(isNotAuthorisedUser)[0];
+    var element = '<button onclick="choseTopic(' + topic.id + ')" id="container-user-' + companion.id + '" type="button" class="btn btn-dark p-3 container-fluid position-relative">' +
+                   '<div class="row align-items-center">' +
+                       '<div class="col-3 p-0 d-flex justify-content-center">' +
+                           '<div class="col-">';
+    if (companion.status === 'ONLINE') {
+       element += '<span id="user-' + companion.id + '" class="position-absolute p-2 bg-success border border-light rounded-circle"></span>';
+    } else {
+       element += '<span id="user-' + companion.id + '" class="position-absolute p-2 bg-success border border-light rounded-circle invisible"></span>';
+    }
+    return element += '</div>' +
+               '<img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"' +
+                    'class="img-fluid rounded-circle border border-light"' +
+                    'alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"' +
+                    'style="width: 60px; height: 60px;">' +
+           '</div>' +
+           '<div class="col-9 text-light">' +
+               '<h6 align="left" class="card-title text-white">' +
+                   companion.firstname + ' ' + companion.lastname +
+               '</h6>' +
+               '<div class="row">' +
+                   '<div class="col-9">' +
+                       '<p align="left" class="card-text text-white text-muted text-truncate">' +
+                           companion.email +
+                       '</p>' +
+                   '</div>' +
+                   '<div class="col-3 invisible" id="span-container-user-' + companion.id + '">' +
+                       '<span class="position-absolute m-2 end-0 badge rounded-pill bg-danger" id="span-context-user-' + companion.id + '">' +
+                           '99+' +
+                       '</span>' +
+                   '</div>' +
+               '</div>' +
+               '</div>' +
+           '</div>' +
+       '</button>';
+}
+
+function isNotAuthorisedUser(user) {
+     return user.id !== authorizedUser.id;
 }
 
 function createMessageContainer(message) {
@@ -131,33 +191,11 @@ function chekOnNewDate(topicId, message_date) {
     dateBreakpoint[topicId] = date;
 }
 
-function viewUserTopics(topics) {
-    var element = '';
-    topics.forEach(topic => {
-        if (topic.status === 'PRIVATE') {
-            topic.subscriber.forEach( subscriber => {
-                if (subscriber.id !== authorizedUser.id) {
-                    element += generateUserCard(subscriber, topic);
-                }
-            });
-        } else {
-            /* View PUBLIC topics */
-        }
-    });
-    chatsList.innerHTML = element;
-}
-
-function generateUserCard(user, topic) {
-    var element = '';
-    if(topic === null) {
-        element = '<button onclick="getTopicFromUserID(' + user.id + ')" type="button" class="btn btn-dark p-3 container-fluid">';
-    } else {
-        element = '<button onclick="preparingToConnect(' + topic.id + ')" type="button" class="btn btn-dark p-3 container-fluid">';
-    }
-    element +=
-        '<div class="row align-items-center">' +
-            '<div class="col-3 p-0 d-flex justify-content-center">' +
-                '<div class="col-">';
+function generateUserCard(user) {
+    var element =   '<button onclick="getTopicFromUserID(' + user.id + ')" type="button" class="btn btn-dark p-3 container-fluid">' +
+                        '<div class="row align-items-center">' +
+                            '<div class="col-3 p-0 d-flex justify-content-center">' +
+                                '<div class="col-">';
     if (user.status === 'ONLINE') {
         element += '<span id="user-' + user.id + '" class="position-absolute p-2 bg-success border border-light rounded-circle"></span>';
     } else {
@@ -195,39 +233,42 @@ function getTopicFromUserID(id) {
     fetch('/user/id:' + id + '/get-topic')
         .then(response => response.json())
         .then(data => {
-            loadedTopics[data.id] = data;
-            preparingToConnect(data.id);
+            preparingToConnect(data);
+            choseTopic(data.id);
         });
 }
 
-function preparingToConnect(topicId) {
+function choseTopic(topicId) {
     clearSearchInput();
     chat.classList.remove('invisible');
+    currentTopic = authorizedUser.channels.filter(topic => topic.id === topicId)[0];
+    var companion = currentTopic.subscribers.filter(isNotAuthorisedUser)[0];
+    document.querySelector('#span-container-user-' + companion.id).classList.remove('invisible');
+    document.querySelector('#span-container-user-' + companion.id).classList.add('invisible');
+    chatHeader.innerHTML = companion.firstname + ' ' + companion.lastname;
+    reloadChatBody(currentTopic.id);
+}
 
-    currentTopic = loadedTopics[topicId];
-
-    if (subscriptions[topicId] !== true) {
-        messages[topicId] = '';
-        subscribeOnTopic(topicId);
-    }
-
-    currentTopic.subscriber.forEach(subscriber => {
-        if(subscriber.id !== authorizedUser.id) {
-            chatHeader.innerHTML = subscriber.firstname + ' ' + subscriber.lastname;
-        }
-    });
-
-    reloadChatBody(messages[topicId], currentTopic);
+function preparingToConnect(topic) {
+    authorizedUser.channels.push(topic);
+    messages[topic.id] = '';
+    newMessages[topic.id] = 0;
+    fetch('/user/topic/id:'+ topic.id + '/messages')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(message => {
+                chekOnNewDate(topic.id, message.createdBy);
+                messages[topic.id] += createMessageContainer(message);
+            });
+        });
+    subscribeOnTopic(topic.id);
+    viewUserTopics();
 }
 
 function clearSearchInput() {
     searchInput.value = '';
     searchInput.blur();
-    fetch('/user/topics')
-        .then(response => response.json())
-        .then(data => {
-            viewUserTopics(data);
-        });
+    viewUserTopics();
 }
 
 function subscribeOnTopic(topicId) {
@@ -241,9 +282,27 @@ function onError(error) {
     connectingElement.innerHTML = 'Could not connect to WebSocket server. Please refresh this page to try again!';
 //    connectingElement.style.color = 'red';
 }
+
+function sendNotification(topicId, userId) {
+    stompClient.send("/app/chat.notification",
+        {},
+        JSON.stringify({
+            type: 'AWAIT_CONNECTION',
+            topic: topicId,
+            sender: authorizedUser,
+            content: userId
+        })
+    );
+}
+
 function sendMessage(event) {
     var messageContent = messageInput.value.trim();
     if(messageContent && stompClient) {
+
+//        if(currentTopic.subscribers.filter(isNotAuthorisedUser)[0].channelsId.indexOf(currentTopic.id) == -1) {
+//            sendNotification(currentTopic.id, currentTopic.subscribers.filter(isNotAuthorisedUser)[0].id);
+//        }
+
         var chatMessage = {
             topic: currentTopic,
             sender: authorizedUser,
@@ -258,73 +317,84 @@ function sendMessage(event) {
 }
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
-    if(message.type === 'JOIN') {
-        if(message.sender.id !== authorizedUser.id) {
-            document.querySelector('#user-' + message.sender.id).classList.remove('invisible');
+    if(message.type === 'AWAIT_CONNECTION') {
+        if (message.sender === authorizedUser.id) {
+            authorizedUser.channels.push(topic);
+            messages[topic.id] = '';
+            subscribeOnTopic(message.topic.id);
+            viewUserTopics();
         }
-    } else if (message.type === 'LEAVE') {
-        if(message.sender.id !== authorizedUser.id) {
-            document.querySelector('#user-' + message.sender.id).classList.add('invisible');
-        }
-    } else {
+    } else if (message.type === 'CHAT') {
         chekOnNewDate(message.topic.id, message.createdBy);
         messages[message.topic.id] += createMessageContainer(message);
-        reloadChatBody(messages[message.topic.id], message.topic);
+        authorizedUser.channels.filter(topic => topic.id === message.topic.id)[0].updatedBy = message.topic.updatedBy;
+        viewUserTopics();
+        if (currentTopic === null || (currentTopic.id !== message.topic.id)) {
+            newMessages[message.topic.id]++;
+            document.querySelector('#span-container-user-' + message.sender.id).classList.remove('invisible');
+            if (newMessages[message.topic.id] > 99) {
+                newMessages[message.topic.id] = '99+';
+            }
+            document.querySelector('#span-context-user-' + message.sender.id).innerHTML = newMessages[message.topic.id];
+//            var element = document.querySelector('#container-user-' + message.sender.id);
+//            element.outerHTML = '';
+//            chatsList.innerHTML = element.outerHTML + chatsList.innerHTML;
+        } else {
+            reloadChatBody(message.topic.id);
+        }
+    } else {
+        authorizedUser.channels.forEach(topic => {
+            if (topic.status === 'PRIVATE' && topic.subscribers.filter(isNotAuthorisedUser)[0].id === message.sender.id) {
+            if(message.type === 'JOIN') {
+                        if(message.sender.id !== authorizedUser.id) {
+                            document.querySelector('#user-' + message.sender.id).classList.remove('invisible');
+                        }
+                    } else if (message.type === 'LEAVE') {
+                        if(message.sender.id !== authorizedUser.id) {
+                            document.querySelector('#user-' + message.sender.id).classList.add('invisible');
+                        }
+                    }
+            }
+        });
     }
 }
 
-function reloadChatBody(messagesCurr, topic) {
-    if (topic.id === currentTopic.id) {
-        chatBody.innerHTML = messagesCurr;
-        scrollChatBody.scrollTop = scrollChatBody.scrollHeight;
-    }
-}
-
-function getAvatarColor(messageSender) {
-    var hash = 0;
-    for (var i = 0; i < messageSender.length; i++) {
-        hash = 31 * hash + messageSender.charCodeAt(i);
-    }
-    var index = Math.abs(hash % colors.length);
-    return colors[index];
+function reloadChatBody(topicId) {
+    chatBody.innerHTML = messages[topicId];
+    scrollChatBody.scrollTop = scrollChatBody.scrollHeight;
 }
 
 function search(text) {
     if (text === '' || text === ' ') {
-        fetch('/user/topics')
-            .then(response => response.json())
-            .then(data => {
-                viewUserTopics(data);
-            });
+        viewUserTopics();
     } else {
         var element = '';
-        element += searchIntoLoadedTopics(text);
+        element += searchIntoUserTopics(text);
         fetch('/search?value=' + text)
             .then(response => response.json())
             .then(data => {
                 element += searchHeader('Global search result: ');
-                data.forEach( item => {
-                    element += generateUserCard(item, null);
+                data.forEach(item => {
+                    element += generateUserCard(item);
                 });
                 chatsList.innerHTML = element;
             });
     }
 }
 
-function searchIntoLoadedTopics(text) {
+function searchIntoUserTopics(text) {
     var element = ''
-    loadedTopics.forEach(topic => {
+    authorizedUser.channels.forEach(topic => {
         if (topic.status === 'PRIVATE') {
-            topic.subscriber.forEach(subscriber => {
-                if(subscriber.id !== authorizedUser.id) {
-                    if (subscriber.email.startsWith(text) ||
-                        subscriber.firstname.startsWith(text)  ||
-                        subscriber.lastname.startsWith(text) ) {
+            var companion = topic.subscribers.filter(isNotAuthorisedUser)[0];
+            if (companion.email.startsWith(text) ||
+                companion.firstname.startsWith(text)  ||
+                companion.lastname.startsWith(text) ) {
 
-                        element += generateUserCard(subscriber, topic);
-                    }
-                }
-            });
+                element += generateTopicCard(topic);
+            }
+        } else {
+            /* View PUBLIC topics */
         }
     });
     return element;

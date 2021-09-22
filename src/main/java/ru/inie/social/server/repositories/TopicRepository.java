@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ru.inie.social.server.entities.Topic;
 import ru.inie.social.server.entities.User;
+import ru.inie.social.server.entities.enums.TopicStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,5 +15,9 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
     Optional<Topic> findById(Long id);
 
     List<Topic> findAllBySubscribers(User subscriber);
+
+    List<Topic> findAllBySubscribersAndStatus(User subscriber, TopicStatus status);
+
+
 
 }
