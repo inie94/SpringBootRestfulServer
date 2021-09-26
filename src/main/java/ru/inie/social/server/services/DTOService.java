@@ -55,9 +55,9 @@ public class DTOService {
     public static UserDTO toUserDTOWithoutChannels(User user) {
         Set<Long> channelsId = new HashSet<>();
 
-        Set<Topic> topics = user.getChannels();
-        if (topics != null)
-            topics.forEach(topic -> channelsId.add(topic.getId()));
+//        Set<Topic> topics = user.getChannels();
+//        if (topics != null)
+//            topics.forEach(topic -> channelsId.add(topic.getId()));
 
         return UserDTO.builder()
                 .id(user.getId())
@@ -67,7 +67,7 @@ public class DTOService {
                 .email(user.getEmail())
                 .dateOfBirth(user.getDateOfBirth())
                 .status(user.getStatus())
-                .channelsId(channelsId)
+//                .channelsId(channelsId)
                 .build();
     }
 

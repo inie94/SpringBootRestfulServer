@@ -16,6 +16,12 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
 
     List<Topic> findAllBySubscribers(User subscriber);
 
+    List<Topic> findAllBySubscribersAndUnsubscribesAndStatus(User subscriber, User unsubscribe, TopicStatus status);
+
+    List<Topic> findAllBySubscribersOrUnsubscribesAndStatus(User subscriber, User unsubscribe, TopicStatus status);
+
+    Optional<Topic> findBySubscribersIdAndUnsubscribesIdAndStatus(Long subscriberId, Long unsubscribeId, TopicStatus status);
+
     List<Topic> findAllBySubscribersAndStatus(User subscriber, TopicStatus status);
 
 

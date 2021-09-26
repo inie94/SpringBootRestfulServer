@@ -9,10 +9,13 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import ru.inie.social.server.dto.MessageDTO;
+import ru.inie.social.server.dto.UserDTO;
 import ru.inie.social.server.entities.Message;
 import ru.inie.social.server.entities.User;
 import ru.inie.social.server.entities.enums.MessageType;
 import ru.inie.social.server.entities.enums.UserStatus;
+import ru.inie.social.server.services.DTOService;
 import ru.inie.social.server.services.UserService;
 
 @Component
@@ -37,7 +40,7 @@ public class WebSocketEventListener {
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        User user1 = (User) headerAccessor.getSessionAttributes().get("username");
+        UserDTO user1 = (UserDTO) headerAccessor.getSessionAttributes().get("username");
         if(user1 != null) {
             User user = disconnectUser(user1.getEmail());
             logger.info("User Disconnected : " + user.getEmail());
@@ -45,19 +48,16 @@ public class WebSocketEventListener {
         }
     }
 
-    private Message createLeaveMessage(User user) {
-        Message message = new Message();
-        message.setType(MessageType.LEAVE);
-        message.setTopic(null);
-        message.setSender(user);
-        message.setContent(String.valueOf(user.getId()));
-        return message;
+    private MessageDTO createLeaveMessage(User user) {
+        return MessageDTO.builder()
+                .type(MessageType.LEAVE)
+                .sender(DTOService.toUserDTOWithoutChannels(user))
+                .build();
     }
 
     private User disconnectUser(String email) {
         User user = service.findByEmail(email);
         user.setStatus(UserStatus.OFFLINE);
-        service.save(user);
-        return user;
+        return service.save(user);
     }
 }

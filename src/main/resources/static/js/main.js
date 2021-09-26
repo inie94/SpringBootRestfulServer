@@ -56,7 +56,7 @@ function onConnected() {
     // Subscribe to the Notification Topic
     stompClient.subscribe('/topic/notification', onMessageReceived);
     // Tell your username to the server
-    stompClient.send("/app/chat.notification",
+    stompClient.send("/app/chat.connect",
         {},
         JSON.stringify({
             type: 'JOIN',
@@ -103,7 +103,12 @@ function viewUserTopics() {
 }
 
 function generateTopicCard(topic) {
-    var companion = topic.subscribers.filter(isNotAuthorisedUser)[0];
+    var companion;
+    if (topic.subscribers.filter(isNotAuthorisedUser)[0] != null) {
+        companion = topic.subscribers.filter(isNotAuthorisedUser)[0];
+    } else if(topic.unsubscribes.filter(isNotAuthorisedUser)[0] != null) {
+        companion = topic.unsubscribes.filter(isNotAuthorisedUser)[0];
+    }
     var element = '<button onclick="choseTopic(' + topic.id + ')" id="container-user-' + companion.id + '" type="button" class="btn btn-dark p-3 container-fluid position-relative">' +
                    '<div class="row align-items-center">' +
                        '<div class="col-3 p-0 d-flex justify-content-center">' +
@@ -242,15 +247,27 @@ function choseTopic(topicId) {
     clearSearchInput();
     chat.classList.remove('invisible');
     currentTopic = authorizedUser.channels.filter(topic => topic.id === topicId)[0];
-    var companion = currentTopic.subscribers.filter(isNotAuthorisedUser)[0];
-    document.querySelector('#span-container-user-' + companion.id).classList.remove('invisible');
-    document.querySelector('#span-container-user-' + companion.id).classList.add('invisible');
+
+    var companion;
+    if (currentTopic.subscribers.filter(isNotAuthorisedUser)[0] != null) {
+        companion = currentTopic.subscribers.filter(isNotAuthorisedUser)[0];
+    } else if (currentTopic.unsubscribes.filter(isNotAuthorisedUser)[0] != null) {
+        companion = currentTopic.unsubscribes.filter(isNotAuthorisedUser)[0];
+    }
+
+    var newMessageBullet = document.querySelector('#span-container-user-' + companion.id);
+    if(newMessageBullet != null && !newMessageBullet.classList.contains('invisible')){
+        newMessageBullet.classList.add('invisible');
+    }
+
     chatHeader.innerHTML = companion.firstname + ' ' + companion.lastname;
     reloadChatBody(currentTopic.id);
 }
 
 function preparingToConnect(topic) {
-    authorizedUser.channels.push(topic);
+    if (authorizedUser.channels.filter(function(channel){return channel.id == topic.id;})[0] == null) {
+        authorizedUser.channels.push(topic);
+    }
     messages[topic.id] = '';
     newMessages[topic.id] = 0;
     fetch('/user/topic/id:'+ topic.id + '/messages')
@@ -283,14 +300,14 @@ function onError(error) {
 //    connectingElement.style.color = 'red';
 }
 
-function sendNotification(topicId, userId) {
+function sendNotification(topic, user) {
     stompClient.send("/app/chat.notification",
         {},
         JSON.stringify({
             type: 'AWAIT_CONNECTION',
-            topic: topicId,
+            topic: topic,
             sender: authorizedUser,
-            content: userId
+            content: JSON.stringify(user)
         })
     );
 }
@@ -299,30 +316,46 @@ function sendMessage(event) {
     var messageContent = messageInput.value.trim();
     if(messageContent && stompClient) {
 
-//        if(currentTopic.subscribers.filter(isNotAuthorisedUser)[0].channelsId.indexOf(currentTopic.id) == -1) {
-//            sendNotification(currentTopic.id, currentTopic.subscribers.filter(isNotAuthorisedUser)[0].id);
-//        }
+        if (currentTopic.status == 'PRIVATE') {
+            if(currentTopic.unsubscribes.length > 0){
+                sendNotification(currentTopic, currentTopic.unsubscribes.filter(isNotAuthorisedUser)[0]);
+            }
+        } else {
 
-        var chatMessage = {
-            topic: currentTopic,
-            sender: authorizedUser,
-            content: messageInput.value,
-            type: 'CHAT',
-            createdBy: Date.now()
-        };
-        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
-        messageInput.value = '';
+        }
+
+// еще где-то нужно отправить сообщение
+
+//        var chatMessage = {
+//            topic: currentTopic,
+//            sender: authorizedUser,
+//            content: messageInput.value,
+//            type: 'CHAT',
+//            createdBy: Date.now()
+//        };
+//        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+//        messageInput.value = '';
     }
     event.preventDefault();
 }
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
     if(message.type === 'AWAIT_CONNECTION') {
-        if (message.sender === authorizedUser.id) {
-            authorizedUser.channels.push(topic);
-            messages[topic.id] = '';
-            subscribeOnTopic(message.topic.id);
-            viewUserTopics();
+        var recipient = JSON.parse(message.content);
+        if (recipient.id === authorizedUser.id) {
+            fetch('/user/topic:' + message.topic.id + '/subscribe')
+                .then(response => response.json())
+                .then(data => {
+                    authorizedUser.channels.push(data);
+                    messages[data.id] = '';
+                    subscribeOnTopic(data.id);
+                    viewUserTopics();
+
+                   // нужно проверить приемку сообщения
+            });
+        } else if (message.sender.id === authorizedUser.id && recipient.status === 'OFFLINE') {
+            // подписываем его на топик и отправляем сообщение
+            console.log('юзер офлайн');
         }
     } else if (message.type === 'CHAT') {
         chekOnNewDate(message.topic.id, message.createdBy);
@@ -344,7 +377,7 @@ function onMessageReceived(payload) {
         }
     } else {
         authorizedUser.channels.forEach(topic => {
-            if (topic.status === 'PRIVATE' && topic.subscribers.filter(isNotAuthorisedUser)[0].id === message.sender.id) {
+            if (topic.status === 'PRIVATE' && topic.subscribers.filter(isNotAuthorisedUser)[0] != null && topic.subscribers.filter(isNotAuthorisedUser)[0].id === message.sender.id) {
             if(message.type === 'JOIN') {
                         if(message.sender.id !== authorizedUser.id) {
                             document.querySelector('#user-' + message.sender.id).classList.remove('invisible');
@@ -387,9 +420,9 @@ function searchIntoUserTopics(text) {
     authorizedUser.channels.forEach(topic => {
         if (topic.status === 'PRIVATE') {
             var companion = topic.subscribers.filter(isNotAuthorisedUser)[0];
-            if (companion.email.startsWith(text) ||
+            if (companion != null && (companion.email.startsWith(text) ||
                 companion.firstname.startsWith(text)  ||
-                companion.lastname.startsWith(text) ) {
+                companion.lastname.startsWith(text)) ) {
 
                 element += generateTopicCard(topic);
             }

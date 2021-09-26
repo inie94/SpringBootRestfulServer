@@ -70,25 +70,32 @@ public class UserMovesController {
         User user = userService.findByEmail(principal.getName());
         User companion = userService.findById(id);
 
-        Set<Topic> topics = topicService.getTopicsBySubscriber(companion, TopicStatus.PRIVATE);
+        Set<Topic> userTopics = topicService.getAllBySubscribersOrUnsubscribesAndStatus(user, user, TopicStatus.PRIVATE);
+        if (userTopics.stream().anyMatch(tpc -> tpc.getUnsubscribes().contains(companion) || tpc.getSubscribers().contains(companion))) {
+            return DTOService.toTopicDTO(userTopics.stream().filter(topic -> topic.getSubscribers().contains(companion) || topic.getUnsubscribes().contains(companion)).findFirst().get());
+        }
 
-        Topic topic;
-        if (topics.isEmpty() ||
-            !topics.stream().anyMatch(item -> item.getSubscribers().contains(user)) ||
-            !topics.stream().anyMatch(item -> item.getUnsubscribes().contains(user))) {
+//        Set<Topic> companionTopics = topicService.getAllBySubscribersAndUnsubscribes(companion, companion, TopicStatus.PRIVATE);
+//        if (companionTopics.stream().anyMatch(topic -> topic.getSubscribers().contains(user) || topic.getUnsubscribes().contains(user))) {
+//            return DTOService.toTopicDTO(companionTopics.stream().filter(topic -> topic.getSubscribers().contains(user) || topic.getUnsubscribes().contains(user)).findFirst().get());
+//        }
 
-            topic = new Topic();
-            topic.setStatus(TopicStatus.PRIVATE);
-            topic.setSubscribers(
-                    new HashSet<>(
-                            Arrays.asList(user, companion)
-                    )
-            );
-
+        Topic topic = new Topic();
+        topic.setStatus(TopicStatus.PRIVATE);
+        topic.setSubscribers(
+                new HashSet<>(
+                        Arrays.asList(user)
+                )
+        );
+        topic.setUnsubscribes(
+                new HashSet<>(
+                        Arrays.asList(companion)
+                )
+        );
             /**
              * Эта хня наверное не нужна,
              * продумать как реализовать отправку сообщения юзеру
-             * у которог еще нет беседы с тобой чтоб он в онлавне увидел
+             * у которого еще нет беседы с тобой чтоб он в онлайне увидел
              *
              * messagingTemplate.convertAndSend(
              *      "/topic/notification",
@@ -99,19 +106,7 @@ public class UserMovesController {
              * );
              *
              */
-
-            topicService.create(topic);
-
-
-        } else {
-            topic = topics.stream().filter(item -> item.getSubscribers().contains(user) || item.getUnsubscribes().contains(user)).findFirst().get();
-            if (topic.getUnsubscribes().contains(user)) {
-                topic.getSubscribers().add(user);
-                topic.getUnsubscribes().remove(user);
-                topicService.update(topic);
-            }
-        }
-        return DTOService.toTopicDTO(topic);
+        return DTOService.toTopicDTO(topicService.create(topic));
     }
 
     @GetMapping("/user/topics")
@@ -138,5 +133,16 @@ public class UserMovesController {
         }
 
         topicService.update(topic);
+    }
+
+    @GetMapping("/user/topic:{id}/subscribe")
+    public TopicDTO subscribeAtTopic(@PathVariable("id") long topicId, Principal principal) {
+        User user = userService.findByEmail(principal.getName());
+        Topic topic = topicService.findById(topicId);
+
+        topic.getUnsubscribes().remove(user);
+        topic.getSubscribers().add(user);
+
+        return DTOService.toTopicDTO(topicService.update(topic));
     }
 }

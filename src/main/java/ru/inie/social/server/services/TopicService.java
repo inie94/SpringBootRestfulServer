@@ -35,14 +35,26 @@ public class TopicService {
         return new HashSet<>(repository.findAllBySubscribersAndStatus(subscriber, status));
     }
 
-    public void create(Topic topic) {
+    public Set<Topic> getAllBySubscribersAndUnsubscribes(User subscriber, User unsubscribe, TopicStatus status) {
+        return new HashSet<>(repository.findAllBySubscribersAndUnsubscribesAndStatus(subscriber, unsubscribe, status));
+    }
+
+    public Set<Topic> getAllBySubscribersOrUnsubscribesAndStatus(User subscriber, User unsubscribe, TopicStatus status) {
+        return new HashSet<>(repository.findAllBySubscribersOrUnsubscribesAndStatus(subscriber, unsubscribe, status));
+    }
+
+    public Topic getTopicBySubscriberAndUnsubscribe(User subscriber, User unsubscribe, TopicStatus status) {
+        return this.getAllBySubscribersAndUnsubscribes(subscriber, unsubscribe, status).stream().findFirst().get();
+    }
+
+
+    public Topic create(Topic topic) {
         topic.setUpdatedBy(new Date().getTime());
-        repository.save(topic);
+        return repository.save(topic);
     }
 
     public Topic update(Topic topic) {
         topic.setUpdatedBy(new Date().getTime());
-        repository.save(topic);
-        return topic;
+        return repository.save(topic);
     }
 }

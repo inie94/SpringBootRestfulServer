@@ -32,7 +32,14 @@ public class ChatController {
 
     @MessageMapping("/chat.notification")
     @SendTo("/topic/notification")
-    public Message addUser(@Payload Message message,
+    public MessageDTO sendNotification(@Payload MessageDTO message) {
+//        messagingTemplate.convertAndSend("/topic/notification", message);
+        return message;
+    }
+
+    @MessageMapping("/chat.connect")
+    @SendTo("/topic/notification")
+    public MessageDTO connect(@Payload MessageDTO message,
                            SimpMessageHeaderAccessor headerAccessor) {
         headerAccessor.getSessionAttributes().put("username", message.getSender());
         return message;
