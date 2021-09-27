@@ -316,6 +316,16 @@ function sendMessage(event) {
     var messageContent = messageInput.value.trim();
     if(messageContent && stompClient) {
 
+        var chatMessage = {
+            topic: currentTopic,
+            sender: authorizedUser,
+            content: messageInput.value,
+            type: 'CHAT',
+            createdBy: Date.now()
+        };
+        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+        messageInput.value = '';
+
         if (currentTopic.status == 'PRIVATE') {
             if(currentTopic.unsubscribes.length > 0){
                 sendNotification(currentTopic, currentTopic.unsubscribes.filter(isNotAuthorisedUser)[0]);
@@ -323,18 +333,6 @@ function sendMessage(event) {
         } else {
 
         }
-
-// еще где-то нужно отправить сообщение
-
-//        var chatMessage = {
-//            topic: currentTopic,
-//            sender: authorizedUser,
-//            content: messageInput.value,
-//            type: 'CHAT',
-//            createdBy: Date.now()
-//        };
-//        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
-//        messageInput.value = '';
     }
     event.preventDefault();
 }
@@ -350,9 +348,15 @@ function onMessageReceived(payload) {
                     messages[data.id] = '';
                     subscribeOnTopic(data.id);
                     viewUserTopics();
-
-                   // нужно проверить приемку сообщения
             });
+            fetch('/user/topic/id:'+ message.topic.id + '/messages')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(message => {
+                        chekOnNewDate(message.topic.id, message.createdBy);
+                        messages[message.topic.id] += createMessageContainer(message);
+                    });
+                });
         } else if (message.sender.id === authorizedUser.id && recipient.status === 'OFFLINE') {
             // подписываем его на топик и отправляем сообщение
             console.log('юзер офлайн');
@@ -377,8 +381,12 @@ function onMessageReceived(payload) {
         }
     } else {
         authorizedUser.channels.forEach(topic => {
-            if (topic.status === 'PRIVATE' && topic.subscribers.filter(isNotAuthorisedUser)[0] != null && topic.subscribers.filter(isNotAuthorisedUser)[0].id === message.sender.id) {
-            if(message.type === 'JOIN') {
+            if (topic.status === 'PRIVATE') {
+                var subscriber = topic.subscribers.filter(isNotAuthorisedUser)[0];
+                var unsubscribe = topic.unsubscribes.filter(isNotAuthorisedUser)[0];
+                if ((subscriber != null && subscriber.id === message.sender.id) ||
+                    (unsubscribe != null && unsubscribe.id === message.sender.id)) {
+                    if(message.type === 'JOIN') {
                         if(message.sender.id !== authorizedUser.id) {
                             document.querySelector('#user-' + message.sender.id).classList.remove('invisible');
                         }
@@ -387,6 +395,7 @@ function onMessageReceived(payload) {
                             document.querySelector('#user-' + message.sender.id).classList.add('invisible');
                         }
                     }
+                }
             }
         });
     }
