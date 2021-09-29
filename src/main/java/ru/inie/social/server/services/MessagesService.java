@@ -9,8 +9,8 @@ import ru.inie.social.server.entities.Topic;
 import ru.inie.social.server.entities.User;
 import ru.inie.social.server.repositories.MessagesRepository;
 
-import java.util.Date;
-import java.util.List;
+import java.lang.reflect.Array;
+import java.util.*;
 
 @Service
 @Transactional
@@ -27,9 +27,14 @@ public class MessagesService {
         this.userService = userService;
     }
 
+    public void save(Message message) {
+        repository.save(message);
+    }
+
     public void save(MessageDTO message) {
         Topic topic = topicService.update(topicService.findById(message.getTopic().getId()));
         message.setTopic(DTOService.toTopicDTO(topic));
+
         repository.save(toMessage(message));
     }
 
@@ -41,6 +46,17 @@ public class MessagesService {
     public Message toMessage(MessageDTO dto) {
         Topic topic = topicService.findById(dto.getTopic().getId());
         User sender = userService.findById(dto.getSender().getId());
-        return new Message(dto.getId(), dto.getType(), topic, dto.getContent(), sender, dto.getCreatedBy());
+        Set<User> received = new HashSet<>();
+        dto.getReceived().forEach(userDTO -> received.add(userService.findById(userDTO.getId())));
+        return new Message(dto.getId(), dto.getType(), topic, dto.getContent(), sender, dto.getCreatedBy(), received);
+    }
+
+
+    public List<Message> findAllByTopicAndReceivedNotUser(Topic topic, User user){
+        return repository.findAllByTopicAndReceivedNotIn(topic, new HashSet<User>(Arrays.asList(user)));
+    }
+
+    public Set<Message> getAllMessagesByTopicAndSenderNot(Topic topic, User user){
+        return new HashSet<>(repository.findAllByTopicAndSenderNot(topic, user));
     }
 }

@@ -67,10 +67,14 @@ function onConnected() {
     )
 
     if (authorizedUser.channels) {
-        viewUserTopics();
         authorizedUser.channels.forEach(channel => {
             messages[channel.id] = '';
-            newMessages[channel.id] = 0;
+            fetch('/user/topic/id:' + channel.id + '/messages/received/count')
+                .then(response => response.json())
+                .then(data => {
+                    newMessages[channel.id] = data;
+                    viewUserTopics();
+                });
             subscribeOnTopic(channel.id);
             fetch('/user/topic/id:'+ channel.id + '/messages')
                 .then(response => response.json())
@@ -118,7 +122,7 @@ function generateTopicCard(topic) {
     } else {
        element += '<span id="user-' + companion.id + '" class="position-absolute p-2 bg-success border border-light rounded-circle invisible"></span>';
     }
-    return element += '</div>' +
+    element += '</div>' +
                '<img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"' +
                     'class="img-fluid rounded-circle border border-light"' +
                     'alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"' +
@@ -133,10 +137,14 @@ function generateTopicCard(topic) {
                        '<p align="left" class="card-text text-white text-muted text-truncate">' +
                            companion.email +
                        '</p>' +
-                   '</div>' +
-                   '<div class="col-3 invisible" id="span-container-user-' + companion.id + '">' +
-                       '<span class="position-absolute m-2 end-0 badge rounded-pill bg-danger" id="span-context-user-' + companion.id + '">' +
-                           '99+' +
+                   '</div>';
+    if (newMessages[topic.id] > 0) {
+        element += '<div class="col-3" id="span-container-user-' + companion.id + '">';
+    } else {
+        element += '<div class="col-3 invisible" id="span-container-user-' + companion.id + '">';
+    }
+    return element + '<span class="position-absolute m-2 end-0 badge rounded-pill bg-danger" id="span-context-user-' + companion.id + '">' +
+                           newMessages[topic.id] +
                        '</span>' +
                    '</div>' +
                '</div>' +
@@ -261,6 +269,10 @@ function choseTopic(topicId) {
     }
 
     chatHeader.innerHTML = companion.firstname + ' ' + companion.lastname;
+
+    fetch('/user/topic/id:' + topicId + '/messages/received');
+    newMessages[topicId] = 0;
+
     reloadChatBody(currentTopic.id);
 }
 
@@ -321,7 +333,8 @@ function sendMessage(event) {
             sender: authorizedUser,
             content: messageInput.value,
             type: 'CHAT',
-            createdBy: Date.now()
+            createdBy: Date.now(),
+            received: [authorizedUser]
         };
         stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
         messageInput.value = '';
@@ -341,7 +354,7 @@ function onMessageReceived(payload) {
     if(message.type === 'AWAIT_CONNECTION') {
         var recipient = JSON.parse(message.content);
         if (recipient.id === authorizedUser.id) {
-            fetch('/user/topic:' + message.topic.id + '/subscribe')
+            fetch('/user/id:' + recipient.id + '/topic:' + message.topic.id + '/subscribe')
                 .then(response => response.json())
                 .then(data => {
                     authorizedUser.channels.push(data);
@@ -358,8 +371,9 @@ function onMessageReceived(payload) {
                     });
                 });
         } else if (message.sender.id === authorizedUser.id && recipient.status === 'OFFLINE') {
-            // подписываем его на топик и отправляем сообщение
-            console.log('юзер офлайн');
+            fetch('/user/id:' + recipient.id + '/topic:' + message.topic.id + '/subscribe')
+                .then(response => response.json())
+                .then(data => {});
         }
     } else if (message.type === 'CHAT') {
         chekOnNewDate(message.topic.id, message.createdBy);

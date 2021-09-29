@@ -7,6 +7,7 @@ import lombok.Setter;
 import ru.inie.social.server.entities.enums.MessageType;
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 @Table(name = "messages")
@@ -36,4 +37,12 @@ public class Message {
 
     @Column(nullable = false)
     private Long createdBy;
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "messages_received",
+            joinColumns = @JoinColumn(name = "topic_id"),
+            inverseJoinColumns = @JoinColumn(name = "received_id")
+    )
+    private Set<User> received;
 }

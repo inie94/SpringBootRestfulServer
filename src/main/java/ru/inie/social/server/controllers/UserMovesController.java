@@ -135,9 +135,10 @@ public class UserMovesController {
         topicService.update(topic);
     }
 
-    @GetMapping("/user/topic:{id}/subscribe")
-    public TopicDTO subscribeAtTopic(@PathVariable("id") long topicId, Principal principal) {
-        User user = userService.findByEmail(principal.getName());
+    @GetMapping("/user/id:{userId}/topic:{topicId}/subscribe")
+    public TopicDTO subscribeAtTopic(@PathVariable("topicId") long topicId,
+                                     @PathVariable("userId") long userId) {
+        User user = userService.findById(userId);
         Topic topic = topicService.findById(topicId);
 
         topic.getUnsubscribes().remove(user);

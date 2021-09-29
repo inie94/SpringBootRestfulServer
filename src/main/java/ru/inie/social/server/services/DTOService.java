@@ -72,12 +72,17 @@ public class DTOService {
     }
 
     public static MessageDTO toMessageDTO(Message message) {
+
+        Set<UserDTO> received = new HashSet<>();
+        message.getReceived().forEach(user -> received.add(toUserDTOWithoutChannels(user)));
+
         return MessageDTO.builder()
                 .id(message.getId())
                 .type(message.getType())
                 .topic(toTopicDTO(message.getTopic()))
                 .sender(toUserDTOWithoutChannels(message.getSender()))
                 .content(message.getContent())
+                .received(received)
                 .createdBy(message.getCreatedBy())
                 .build();
     }
