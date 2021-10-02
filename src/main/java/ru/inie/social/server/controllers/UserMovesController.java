@@ -6,12 +6,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.inie.social.server.dto.MessageDTO;
 import ru.inie.social.server.dto.TopicDTO;
 import ru.inie.social.server.dto.UserDTO;
+import ru.inie.social.server.entities.Relationship;
 import ru.inie.social.server.entities.Topic;
 import ru.inie.social.server.entities.User;
-import ru.inie.social.server.entities.enums.MessageType;
 import ru.inie.social.server.entities.enums.TopicStatus;
 import ru.inie.social.server.services.DTOService;
 import ru.inie.social.server.services.TopicService;
@@ -19,6 +18,7 @@ import ru.inie.social.server.services.UserService;
 
 import java.security.Principal;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 @RestController
 public class UserMovesController {
@@ -41,14 +41,16 @@ public class UserMovesController {
         List<UserDTO> usersDTOs = new ArrayList<>();
         List<User> users = userService.searchUsersBy(searchValue);
 
-        user.getChannels().forEach(topic -> {
-            switch (topic.getStatus()) {
+        user.getRelationships().forEach(UserRelationship -> {
+            switch (UserRelationship.getTopic().getStatus()) {
                 case PRIVATE:
-                    topic.getSubscribers().forEach(subscriber -> {
+                    UserRelationship.getTopic().getRelationships().forEach(topicRelationships -> {
+                        User subscriber = topicRelationships.getUser();
                         if (subscriber.getId() != user.getId()) {
                             if (subscriber.getEmail().startsWith(searchValue) ||
-                                    subscriber.getFirstname().startsWith(searchValue) ||
-                                    subscriber.getLastname().startsWith(searchValue)) {
+                                subscriber.getFirstname().startsWith(searchValue) ||
+                                subscriber.getLastname().startsWith(searchValue)) {
+
                                 users.remove(subscriber);
                             }
                         }
@@ -57,9 +59,10 @@ public class UserMovesController {
                 case PUBIC:
             }
         });
+
         users.remove(user);
 
-        users.forEach(user1 -> usersDTOs.add(DTOService.toUserDTOWithoutChannels(user1)));
+        users.forEach(user1 -> usersDTOs.add(DTOService.toUserDTOWithoutRelationships(user1)));
 
         return usersDTOs;
     }
@@ -70,18 +73,31 @@ public class UserMovesController {
         User user = userService.findByEmail(principal.getName());
         User companion = userService.findById(id);
 
-        Set<Topic> userTopics = topicService.getAllBySubscribersOrUnsubscribesAndStatus(user, user, TopicStatus.PRIVATE);
-        if (userTopics.stream().anyMatch(tpc -> tpc.getUnsubscribes().contains(companion) || tpc.getSubscribers().contains(companion))) {
-            return DTOService.toTopicDTO(userTopics.stream().filter(topic -> topic.getSubscribers().contains(companion) || topic.getUnsubscribes().contains(companion)).findFirst().get());
-        }
+        AtomicReference<Topic> topic = new AtomicReference<>(new Topic());
+        user.getRelationships().forEach(userRelationship -> {
+            userRelationship.getTopic().getRelationships().forEach(topicRelationship -> {
+                if (topicRelationship.getUser().getId() == companion.getId()) {
+                    topic.set(topicRelationship.getTopic());
+                }
+            });
+        });
+
+        /*
+         Продолжить исправление
+         */
+
+//        Set<Topic> userTopics = topicService.getAllBySubscribersOrUnsubscribesAndStatus(user, user, TopicStatus.PRIVATE);
+//        if (userTopics.stream().anyMatch(tpc -> tpc.getUnsubscribes().contains(companion) || tpc.getSubscribers().contains(companion))) {
+//            return DTOService.toTopicDTO(userTopics.stream().filter(topic -> topic.getSubscribers().contains(companion) || topic.getUnsubscribes().contains(companion)).findFirst().get());
+//        }
 
 //        Set<Topic> companionTopics = topicService.getAllBySubscribersAndUnsubscribes(companion, companion, TopicStatus.PRIVATE);
 //        if (companionTopics.stream().anyMatch(topic -> topic.getSubscribers().contains(user) || topic.getUnsubscribes().contains(user))) {
 //            return DTOService.toTopicDTO(companionTopics.stream().filter(topic -> topic.getSubscribers().contains(user) || topic.getUnsubscribes().contains(user)).findFirst().get());
 //        }
 
-        Topic topic = new Topic();
-        topic.setStatus(TopicStatus.PRIVATE);
+
+        topic.get().setStatus(TopicStatus.PRIVATE);
         topic.setSubscribers(
                 new HashSet<>(
                         Arrays.asList(user)
@@ -106,7 +122,7 @@ public class UserMovesController {
              * );
              *
              */
-        return DTOService.toTopicDTO(topicService.create(topic));
+        return DTOService.toTopicDTO(topicService.create(topic.get()));
     }
 
     @GetMapping("/user/topics")

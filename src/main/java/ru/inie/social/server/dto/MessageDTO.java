@@ -3,8 +3,6 @@ package ru.inie.social.server.dto;
 import lombok.*;
 import ru.inie.social.server.entities.enums.MessageType;
 
-import java.util.Set;
-
 @Getter
 @Setter
 @Builder
@@ -17,5 +15,4 @@ public class MessageDTO {
     private String content;
     private UserDTO sender;
     private Long createdBy;
-    private Set<UserDTO> received;
 }

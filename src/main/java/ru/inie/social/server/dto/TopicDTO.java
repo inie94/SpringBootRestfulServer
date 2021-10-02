@@ -4,7 +4,6 @@ import lombok.*;
 import ru.inie.social.server.entities.User;
 import ru.inie.social.server.entities.enums.TopicStatus;
 
-import javax.persistence.*;
 import java.util.Set;
 
 @Getter
@@ -15,9 +14,8 @@ import java.util.Set;
 public class TopicDTO {
     private Long id;
     private TopicStatus status;
-    private Set<UserDTO> subscribers;
+    private Set<RelationshipDTO> relationships;
     private User creator;
-    private Set<UserDTO> unsubscribes;
     private String name;
     private Long updatedBy;
 }

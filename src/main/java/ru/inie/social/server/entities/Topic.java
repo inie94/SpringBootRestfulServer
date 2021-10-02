@@ -22,20 +22,12 @@ public class Topic {
     @Column(nullable = false)
     private TopicStatus status;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-            name = "topics_subscribers",
-            joinColumns = @JoinColumn(name = "topic_id"),
-            inverseJoinColumns = @JoinColumn(name = "subscribers_id")
-    )
-    private Set<User> subscribers;
-
     @ManyToOne
     @JoinColumn(name = "creator_id")
     private User creator;
 
-    @ManyToMany
-    private Set<User> unsubscribes;
+    @OneToMany(mappedBy = "topic")
+    private Set<Relationship> relationships;
     
     private String name;
 

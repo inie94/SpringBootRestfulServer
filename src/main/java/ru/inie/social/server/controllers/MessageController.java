@@ -43,39 +43,39 @@ public class MessageController {
         return messages;
     }
 
-    @GetMapping("/user/topic/id:{id}/messages/received")
-    public void allMessagesFromTopicReceivedByUser(@PathVariable("id") long id,
-                                                    Principal principal) {
-        User user = userService.findByEmail(principal.getName());
-        Topic topic = topicService.findById(id);
+//    @GetMapping("/user/topic/id:{id}/messages/received")
+//    public void allMessagesFromTopicReceivedByUser(@PathVariable("id") long id,
+//                                                    Principal principal) {
+//        User user = userService.findByEmail(principal.getName());
+//        Topic topic = topicService.findById(id);
+//
+//        Set<Message> messages = messagesService.getAllMessagesByTopicAndSenderNot(topic, user);
+//        Iterator<Message> messageIterator = messages.iterator();
+//        while(messageIterator.hasNext()) {
+//            if (messageIterator.next().getReceived().contains(user)) {
+//                messageIterator.remove();
+//            }
+//        }
+//        messages.forEach(message -> {
+//            message.getReceived().add(user);
+//            messagesService.save(message);
+//        });
+//
+//    }
 
-        Set<Message> messages = messagesService.getAllMessagesByTopicAndSenderNot(topic, user);
-        Iterator<Message> messageIterator = messages.iterator();
-        while(messageIterator.hasNext()) {
-            if (messageIterator.next().getReceived().contains(user)) {
-                messageIterator.remove();
-            }
-        }
-        messages.forEach(message -> {
-            message.getReceived().add(user);
-            messagesService.save(message);
-        });
-
-    }
-
-    @GetMapping("/user/topic/id:{id}/messages/received/count")
-    public int countAllNewMessagesFromTopicReceivedByUser(@PathVariable("id") long id,
-                                                            Principal principal) {
-        User user = userService.findByEmail(principal.getName());
-        Topic topic = topicService.findById(id);
-
-        Set<Message> messages = messagesService.getAllMessagesByTopicAndSenderNot(topic, user);
-        Iterator<Message> messageIterator = messages.iterator();
-        while(messageIterator.hasNext()) {
-            if (messageIterator.next().getReceived().contains(user)) {
-                messageIterator.remove();
-            }
-        }
-        return messages.size();
-    }
+//    @GetMapping("/user/topic/id:{id}/messages/received/count")
+//    public int countAllNewMessagesFromTopicReceivedByUser(@PathVariable("id") long id,
+//                                                            Principal principal) {
+//        User user = userService.findByEmail(principal.getName());
+//        Topic topic = topicService.findById(id);
+//
+//        Set<Message> messages = messagesService.getAllMessagesByTopicAndSenderNot(topic, user);
+//        Iterator<Message> messageIterator = messages.iterator();
+//        while(messageIterator.hasNext()) {
+//            if (messageIterator.next().getReceived().contains(user)) {
+//                messageIterator.remove();
+//            }
+//        }
+//        return messages.size();
+//    }
 }

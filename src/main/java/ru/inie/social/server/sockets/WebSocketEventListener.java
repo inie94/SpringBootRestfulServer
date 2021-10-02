@@ -11,7 +11,6 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import ru.inie.social.server.dto.MessageDTO;
 import ru.inie.social.server.dto.UserDTO;
-import ru.inie.social.server.entities.Message;
 import ru.inie.social.server.entities.User;
 import ru.inie.social.server.entities.enums.MessageType;
 import ru.inie.social.server.entities.enums.UserStatus;
@@ -51,7 +50,7 @@ public class WebSocketEventListener {
     private MessageDTO createLeaveMessage(User user) {
         return MessageDTO.builder()
                 .type(MessageType.LEAVE)
-                .sender(DTOService.toUserDTOWithoutChannels(user))
+                .sender(DTOService.toUserDTOWithoutRelationships(user))
                 .build();
     }
 

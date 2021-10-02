@@ -1,10 +1,11 @@
 package ru.inie.social.server.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.inie.social.server.dto.MessageDTO;
+import ru.inie.social.server.dto.RelationshipDTO;
 import ru.inie.social.server.dto.TopicDTO;
 import ru.inie.social.server.dto.UserDTO;
 import ru.inie.social.server.entities.Message;
+import ru.inie.social.server.entities.Relationship;
 import ru.inie.social.server.entities.Topic;
 import ru.inie.social.server.entities.User;
 
@@ -14,9 +15,10 @@ import java.util.Set;
 public class DTOService {
 
     public static UserDTO toUserDTO(User user) {
-        Set<TopicDTO> channels = new HashSet<>();
+        Set<RelationshipDTO> relationships = new HashSet<>();
 
-        user.getChannels().forEach(topic -> channels.add(toTopicDTO(topic)));
+        if(user.getRelationships() != null)
+            user.getRelationships().forEach(relationship -> relationships.add(toRelationshipDTO(relationship)));
 
         return UserDTO.builder()
                 .id(user.getId())
@@ -25,39 +27,37 @@ public class DTOService {
                 .gender(user.getGender())
                 .email(user.getEmail())
                 .dateOfBirth(user.getDateOfBirth())
-                .channels(channels)
+                .relationships(relationships)
+                .build();
+    }
+
+    private static RelationshipDTO toRelationshipDTO(Relationship relationship) {
+        return RelationshipDTO.builder()
+                .id(relationship.getId())
+                .status(relationship.getStatus())
+                .topic(toTopicDTO(relationship.getTopic()))
+                .user(toUserDTOWithoutRelationships(relationship.getUser()))
+                .updatedBy(relationship.getUpdatedBy())
                 .build();
     }
 
     public static TopicDTO toTopicDTO(Topic topic) {
-        Set<UserDTO> subscribers = new HashSet<>();
-        Set<UserDTO> unsubscribes = new HashSet<>();
+        Set<RelationshipDTO> relationships = new HashSet<>();
 
-        Set<User> topicSubscribers = topic.getSubscribers();
-        if (topicSubscribers != null)
-            topicSubscribers.forEach(user -> subscribers.add(toUserDTOWithoutChannels(user)));
-
-        Set<User> topicUnsubscribes = topic.getUnsubscribes();
-        if (topicUnsubscribes != null)
-            topicUnsubscribes.forEach(user -> unsubscribes.add(toUserDTOWithoutChannels(user)));
+        if(topic.getRelationships() != null)
+            topic.getRelationships().forEach(relationship -> relationships.add(toRelationshipDTO(relationship)));
 
         return TopicDTO.builder()
                 .id(topic.getId())
                 .creator(topic.getCreator())
                 .name(topic.getName())
                 .status(topic.getStatus())
-                .subscribers(subscribers)
-                .unsubscribes(unsubscribes)
+                .relationships(relationships)
                 .updatedBy(topic.getUpdatedBy())
                 .build();
     }
 
-    public static UserDTO toUserDTOWithoutChannels(User user) {
-        Set<Long> channelsId = new HashSet<>();
-
-//        Set<Topic> topics = user.getChannels();
-//        if (topics != null)
-//            topics.forEach(topic -> channelsId.add(topic.getId()));
+    public static UserDTO toUserDTOWithoutRelationships(User user) {
 
         return UserDTO.builder()
                 .id(user.getId())
@@ -67,22 +67,17 @@ public class DTOService {
                 .email(user.getEmail())
                 .dateOfBirth(user.getDateOfBirth())
                 .status(user.getStatus())
-//                .channelsId(channelsId)
                 .build();
     }
 
     public static MessageDTO toMessageDTO(Message message) {
 
-        Set<UserDTO> received = new HashSet<>();
-        message.getReceived().forEach(user -> received.add(toUserDTOWithoutChannels(user)));
-
         return MessageDTO.builder()
                 .id(message.getId())
                 .type(message.getType())
                 .topic(toTopicDTO(message.getTopic()))
-                .sender(toUserDTOWithoutChannels(message.getSender()))
+                .sender(toUserDTOWithoutRelationships(message.getSender()))
                 .content(message.getContent())
-                .received(received)
                 .createdBy(message.getCreatedBy())
                 .build();
     }

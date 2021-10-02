@@ -1,6 +1,5 @@
 package ru.inie.social.server.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,7 +8,6 @@ import ru.inie.social.server.entities.enums.UserStatus;
 
 import javax.persistence.*;
 import java.sql.Date;
-import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -21,6 +19,7 @@ import java.util.Set;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     @Column(name = "first_name",
@@ -46,8 +45,8 @@ public class User {
 //    @Size(min = 6, max = 12, message = "Password should be between 6 and 12 characters")
     private String password;
 
-    @ManyToMany(mappedBy = "subscribers")
-    private Set<Topic> channels;
+    @OneToMany(mappedBy = "user")
+    private Set<Relationship> relationships;
 
     @Column(nullable = false)
     private UserStatus status;

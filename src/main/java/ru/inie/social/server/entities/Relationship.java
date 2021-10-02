@@ -4,37 +4,31 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.inie.social.server.entities.enums.MessageType;
+import ru.inie.social.server.entities.enums.SubscribeStatus;
 
 import javax.persistence.*;
-import java.util.Set;
 
 @Entity
-@Table(name = "messages")
+@Table(name = "relationships")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Message {
+public class Relationship {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(nullable = false)
-    private MessageType type;
-
     @ManyToOne
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @Column(nullable = false)
-    private String content;
-
     @ManyToOne
-    @JoinColumn(name = "sender_id")
-    private User sender;
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    @Column(nullable = false)
-    private Long createdBy;
+    private SubscribeStatus status;
+
+    private Long updatedBy;
 }
