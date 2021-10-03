@@ -31,7 +31,7 @@ public class DTOService {
                 .build();
     }
 
-    private static RelationshipDTO toRelationshipDTO(Relationship relationship) {
+    public static RelationshipDTO toRelationshipDTO(Relationship relationship) {
         return RelationshipDTO.builder()
                 .id(relationship.getId())
                 .status(relationship.getStatus())
@@ -51,7 +51,7 @@ public class DTOService {
                 .id(topic.getId())
                 .creator(topic.getCreator())
                 .name(topic.getName())
-                .status(topic.getStatus())
+                .mode(topic.getMode())
                 .relationships(relationships)
                 .updatedBy(topic.getUpdatedBy())
                 .build();

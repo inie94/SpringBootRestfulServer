@@ -1,7 +1,7 @@
 package ru.inie.social.server.entities;
 
 import lombok.*;
-import ru.inie.social.server.entities.enums.TopicStatus;
+import ru.inie.social.server.entities.enums.TopicMode;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -20,7 +20,7 @@ public class Topic {
     private Long id;
 
     @Column(nullable = false)
-    private TopicStatus status;
+    private TopicMode mode;
 
     @ManyToOne
     @JoinColumn(name = "creator_id")

@@ -1,0 +1,5 @@
+
+Request for select privateChat between 2 users:
+    SELECT * FROM relationships r INNER JOIN topics t ON t.id = r.topic_id
+        WHERE t.mode = 0 AND (r.user_id = 2 OR r.user_id = 3) AND topic_id IN (
+            SELECT topic_id FROM relationships GROUP BY topic_id HAVING COUNT(topic_id) > 1);

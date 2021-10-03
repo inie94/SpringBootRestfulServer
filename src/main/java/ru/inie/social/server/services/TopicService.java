@@ -5,13 +5,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.inie.social.server.entities.Topic;
-import ru.inie.social.server.entities.User;
-import ru.inie.social.server.entities.enums.TopicStatus;
 import ru.inie.social.server.repositories.TopicRepository;
 
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 @Service
 public class TopicService {
@@ -28,24 +24,24 @@ public class TopicService {
         return repository.findById(id).get();
     }
 
-    public Set<Topic> getTopicsBySubscriber(User subscriber) {
-        return new HashSet<>(repository.findAllBySubscribers(subscriber));
-    }
-    public Set<Topic> getTopicsBySubscriber(User subscriber, TopicStatus status) {
-        return new HashSet<>(repository.findAllBySubscribersAndStatus(subscriber, status));
-    }
+//    public Set<Topic> getTopicsBySubscriber(User subscriber) {
+//        return new HashSet<>(repository.findAllBySubscribers(subscriber));
+//    }
+//    public Set<Topic> getTopicsBySubscriber(User subscriber, TopicStatus status) {
+//        return new HashSet<>(repository.findAllBySubscribersAndStatus(subscriber, status));
+//    }
+//
+//    public Set<Topic> getAllBySubscribersAndUnsubscribes(User subscriber, User unsubscribe, TopicStatus status) {
+//        return new HashSet<>(repository.findAllBySubscribersAndUnsubscribesAndStatus(subscriber, unsubscribe, status));
+//    }
+//
+//    public Set<Topic> getAllBySubscribersOrUnsubscribesAndStatus(User subscriber, User unsubscribe, TopicStatus status) {
+//        return new HashSet<>(repository.findAllBySubscribersOrUnsubscribesAndStatus(subscriber, unsubscribe, status));
+//    }
 
-    public Set<Topic> getAllBySubscribersAndUnsubscribes(User subscriber, User unsubscribe, TopicStatus status) {
-        return new HashSet<>(repository.findAllBySubscribersAndUnsubscribesAndStatus(subscriber, unsubscribe, status));
-    }
-
-    public Set<Topic> getAllBySubscribersOrUnsubscribesAndStatus(User subscriber, User unsubscribe, TopicStatus status) {
-        return new HashSet<>(repository.findAllBySubscribersOrUnsubscribesAndStatus(subscriber, unsubscribe, status));
-    }
-
-    public Topic getTopicBySubscriberAndUnsubscribe(User subscriber, User unsubscribe, TopicStatus status) {
-        return this.getAllBySubscribersAndUnsubscribes(subscriber, unsubscribe, status).stream().findFirst().get();
-    }
+//    public Topic getTopicBySubscriberAndUnsubscribe(User subscriber, User unsubscribe, TopicStatus status) {
+//        return this.getAllBySubscribersAndUnsubscribes(subscriber, unsubscribe, status).stream().findFirst().get();
+//    }
 
 
     public Topic create(Topic topic) {

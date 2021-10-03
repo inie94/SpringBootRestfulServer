@@ -1,6 +1,6 @@
 package ru.inie.social.server.entities.enums;
 
-public enum TopicStatus {
+public enum TopicMode {
     PRIVATE,
     PUBIC
 }

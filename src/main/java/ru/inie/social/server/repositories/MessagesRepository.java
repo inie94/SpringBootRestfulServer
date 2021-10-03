@@ -12,7 +12,7 @@ import java.util.Set;
 @Repository
 public interface MessagesRepository extends JpaRepository<Message, Long> {
     List<Message> findByTopicAndCreatedByAfterOrderByCreatedByAsc(Topic topic, Long timestamp);
-    List<Message> findAllByTopicAndReceivedNotIn(Topic topic, Set<User> users);
+//    List<Message> findAllByTopicAndReceivedNotIn(Topic topic, Set<User> users);
     List<Message> findAllByTopicAndSenderNot(Topic topic, User user);
 
 }

@@ -28,6 +28,8 @@ public class Relationship {
     @JoinColumn(name = "user_id")
     private User user;
 
+//    private TopicStatus topicStatus = topic.getStatus();
+
     private SubscribeStatus status;
 
     private Long updatedBy;

@@ -47,14 +47,14 @@ public class MessagesService {
         Topic topic = topicService.findById(dto.getTopic().getId());
         User sender = userService.findById(dto.getSender().getId());
         Set<User> received = new HashSet<>();
-        dto.getReceived().forEach(userDTO -> received.add(userService.findById(userDTO.getId())));
-        return new Message(dto.getId(), dto.getType(), topic, dto.getContent(), sender, dto.getCreatedBy(), received);
+//        dto.getReceived().forEach(userDTO -> received.add(userService.findById(userDTO.getId())));
+        return new Message(dto.getId(), dto.getType(), topic, dto.getContent(), sender, dto.getCreatedBy());
     }
 
 
-    public List<Message> findAllByTopicAndReceivedNotUser(Topic topic, User user){
-        return repository.findAllByTopicAndReceivedNotIn(topic, new HashSet<User>(Arrays.asList(user)));
-    }
+//    public List<Message> findAllByTopicAndReceivedNotUser(Topic topic, User user){
+//        return repository.findAllByTopicAndReceivedNotIn(topic, new HashSet<User>(Arrays.asList(user)));
+//    }
 
     public Set<Message> getAllMessagesByTopicAndSenderNot(Topic topic, User user){
         return new HashSet<>(repository.findAllByTopicAndSenderNot(topic, user));
