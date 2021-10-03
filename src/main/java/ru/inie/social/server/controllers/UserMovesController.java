@@ -50,7 +50,7 @@ public class UserMovesController {
                 case PRIVATE:
                     UserRelationship.getTopic().getRelationships().forEach(topicRelationships -> {
                         User subscriber = topicRelationships.getUser();
-                        if (subscriber.getId() != user.getId()) {
+                        if (!Objects.equals(subscriber.getId(), user.getId())) {
                             if (subscriber.getEmail().startsWith(searchValue) ||
                                 subscriber.getFirstname().startsWith(searchValue) ||
                                 subscriber.getLastname().startsWith(searchValue)) {
