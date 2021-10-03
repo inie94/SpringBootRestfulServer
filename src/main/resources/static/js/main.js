@@ -66,22 +66,22 @@ function onConnected() {
         })
     )
 
-    if (authorizedUser.channels) {
-        authorizedUser.channels.forEach(channel => {
-            messages[channel.id] = '';
-            fetch('/user/topic/id:' + channel.id + '/messages/received/count')
-                .then(response => response.json())
-                .then(data => {
-                    newMessages[channel.id] = data;
+    if (authorizedUser.relationships) {
+        authorizedUser.relationships.forEach(relationship => {
+            messages[relationship.topic.id] = '';
+//            fetch('/user/topic/id:' + channel.id + '/messages/received/count')
+//                .then(response => response.json())
+//                .then(data => {
+//                    newMessages[channel.id] = data;
                     viewUserTopics();
-                });
-            subscribeOnTopic(channel.id);
-            fetch('/user/topic/id:'+ channel.id + '/messages')
+//                });
+            subscribeOnTopic(relationship.topic.id);
+            fetch('/user/topic/id:'+ relationship.topic.id + '/messages')
                 .then(response => response.json())
                 .then(data => {
                     data.forEach(message => {
-                        chekOnNewDate(channel.id, message.createdBy);
-                        messages[channel.id] += createMessageContainer(message);
+                        chekOnNewDate(relationship.topic.id, message.createdBy);
+                        messages[relationship.topic.id] += createMessageContainer(message);
                     });
                 });
         });
@@ -90,16 +90,18 @@ function onConnected() {
 
 function viewUserTopics() {
     var element = '';
-    authorizedUser.channels.sort(
+    authorizedUser.relationships.sort(
                 function(a, b) {
-                    return b.updatedBy - a.updatedBy;
+                    return b.topic.updatedBy - a.topic.updatedBy;
                 }
             );
-    authorizedUser.channels.forEach(topic => {
-        if (topic.status === 'PRIVATE') {
-            element += generateTopicCard(topic);
-        } else {
-            /* View PUBLIC topics */
+    authorizedUser.relationships.forEach(relationship => {
+        if (relationship.status === 'SUBSCRIBE') {
+            if (relationship.topic.mode === 'PRIVATE') {
+                element += generateTopicCard(relationship.topic);
+            } else {
+                /* View PUBLIC topics */
+            }
         }
     });
     chatsListViews = element;
@@ -107,12 +109,7 @@ function viewUserTopics() {
 }
 
 function generateTopicCard(topic) {
-    var companion;
-    if (topic.subscribers.filter(isNotAuthorisedUser)[0] != null) {
-        companion = topic.subscribers.filter(isNotAuthorisedUser)[0];
-    } else if(topic.unsubscribes.filter(isNotAuthorisedUser)[0] != null) {
-        companion = topic.unsubscribes.filter(isNotAuthorisedUser)[0];
-    }
+    var companion = topic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].user;
     var element = '<button onclick="choseTopic(' + topic.id + ')" id="container-user-' + companion.id + '" type="button" class="btn btn-dark p-3 container-fluid position-relative">' +
                    '<div class="row align-items-center">' +
                        '<div class="col-3 p-0 d-flex justify-content-center">' +
@@ -247,21 +244,36 @@ function getTopicFromUserID(id) {
         .then(response => response.json())
         .then(data => {
             preparingToConnect(data);
-            choseTopic(data.id);
+            choseTopic(data.topic.id);
         });
+}
+
+function preparingToConnect(someRelationship) {
+    if (authorizedUser.relationships.filter(relationship => relationship.id == someRelationship.id)[0] == null) {
+        authorizedUser.relationships.push(someRelationship);
+    } else {
+        authorizedUser.relationships.filter(relationship => relationship.id == someRelationship.id)[0] = someRelationship;
+    }
+    messages[someRelationship.topic.id] = '';
+    newMessages[someRelationship.topic.id] = 0;
+    fetch('/user/topic/id:'+ someRelationship.topic.id + '/messages')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(message => {
+                chekOnNewDate(someRelationship.topic.id, message.createdBy);
+                messages[someRelationship.topic.id] += createMessageContainer(message);
+            });
+        });
+    subscribeOnTopic(someRelationship.topic.id);
+    viewUserTopics();
 }
 
 function choseTopic(topicId) {
     clearSearchInput();
     chat.classList.remove('invisible');
-    currentTopic = authorizedUser.channels.filter(topic => topic.id === topicId)[0];
+    currentTopic = authorizedUser.relationships.filter(relationship => relationship.topic.id === topicId)[0].topic;
 
-    var companion;
-    if (currentTopic.subscribers.filter(isNotAuthorisedUser)[0] != null) {
-        companion = currentTopic.subscribers.filter(isNotAuthorisedUser)[0];
-    } else if (currentTopic.unsubscribes.filter(isNotAuthorisedUser)[0] != null) {
-        companion = currentTopic.unsubscribes.filter(isNotAuthorisedUser)[0];
-    }
+    var companion = currentTopic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].user;
 
     var newMessageBullet = document.querySelector('#span-container-user-' + companion.id);
     if(newMessageBullet != null && !newMessageBullet.classList.contains('invisible')){
@@ -269,31 +281,14 @@ function choseTopic(topicId) {
     }
 
     chatHeader.innerHTML = companion.firstname + ' ' + companion.lastname;
-
-    fetch('/user/topic/id:' + topicId + '/messages/received');
+/*
+    Добавить обновление времени отношения
+*/
+//    fetch('/user/topic/id:' + topicId + '/messages/received');
     newMessages[topicId] = 0;
 
     reloadChatBody(currentTopic.id);
 }
-
-function preparingToConnect(topic) {
-    if (authorizedUser.channels.filter(function(channel){return channel.id == topic.id;})[0] == null) {
-        authorizedUser.channels.push(topic);
-    }
-    messages[topic.id] = '';
-    newMessages[topic.id] = 0;
-    fetch('/user/topic/id:'+ topic.id + '/messages')
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(message => {
-                chekOnNewDate(topic.id, message.createdBy);
-                messages[topic.id] += createMessageContainer(message);
-            });
-        });
-    subscribeOnTopic(topic.id);
-    viewUserTopics();
-}
-
 function clearSearchInput() {
     searchInput.value = '';
     searchInput.blur();
@@ -333,15 +328,14 @@ function sendMessage(event) {
             sender: authorizedUser,
             content: messageInput.value,
             type: 'CHAT',
-            createdBy: Date.now(),
-            received: [authorizedUser]
+            createdBy: Date.now()
         };
         stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
         messageInput.value = '';
 
         if (currentTopic.status == 'PRIVATE') {
-            if(currentTopic.unsubscribes.length > 0){
-                sendNotification(currentTopic, currentTopic.unsubscribes.filter(isNotAuthorisedUser)[0]);
+            if(currentTopic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].status === 'UNSUBSCRIBE'){
+                sendNotification(currentTopic, currentTopic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].user);
             }
         } else {
 
@@ -357,9 +351,13 @@ function onMessageReceived(payload) {
             fetch('/user/id:' + recipient.id + '/topic:' + message.topic.id + '/subscribe')
                 .then(response => response.json())
                 .then(data => {
-                    authorizedUser.channels.push(data);
-                    messages[data.id] = '';
-                    subscribeOnTopic(data.id);
+                    if(authorizedUser.relationships.filter(relationship => relationship.topic.id === message.topic.id)[0] != null) {
+                        authorizedUser.relationships.filter(relationship => relationship.topic.id === message.topic.id)[0] = data;
+                    } else {
+                        authorizedUser.relationships.push(data);
+                    }
+                    messages[data.topic.id] = '';
+                    subscribeOnTopic(data.topic.id);
                     viewUserTopics();
             });
             fetch('/user/topic/id:'+ message.topic.id + '/messages')
@@ -378,7 +376,7 @@ function onMessageReceived(payload) {
     } else if (message.type === 'CHAT') {
         chekOnNewDate(message.topic.id, message.createdBy);
         messages[message.topic.id] += createMessageContainer(message);
-        authorizedUser.channels.filter(topic => topic.id === message.topic.id)[0].updatedBy = message.topic.updatedBy;
+        authorizedUser.relationships.filter(relationship => relationship.topic.id === message.topic.id)[0].topic.updatedBy = message.topic.updatedBy;
         viewUserTopics();
         if (currentTopic === null || (currentTopic.id !== message.topic.id)) {
             newMessages[message.topic.id]++;
@@ -394,12 +392,10 @@ function onMessageReceived(payload) {
             reloadChatBody(message.topic.id);
         }
     } else {
-        authorizedUser.channels.forEach(topic => {
-            if (topic.status === 'PRIVATE') {
-                var subscriber = topic.subscribers.filter(isNotAuthorisedUser)[0];
-                var unsubscribe = topic.unsubscribes.filter(isNotAuthorisedUser)[0];
-                if ((subscriber != null && subscriber.id === message.sender.id) ||
-                    (unsubscribe != null && unsubscribe.id === message.sender.id)) {
+        authorizedUser.relationships.forEach(relationship => {
+            if (relationship.topic.mode === 'PRIVATE') {
+                var companion = relationship.topic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].user;
+                if (companion != null && companion.id === message.sender.id) {
                     if(message.type === 'JOIN') {
                         if(message.sender.id !== authorizedUser.id) {
                             document.querySelector('#user-' + message.sender.id).classList.remove('invisible');
@@ -425,7 +421,7 @@ function search(text) {
         viewUserTopics();
     } else {
         var element = '';
-        element += searchIntoUserTopics(text);
+//        element += searchIntoUserTopics(text);
         fetch('/search?value=' + text)
             .then(response => response.json())
             .then(data => {

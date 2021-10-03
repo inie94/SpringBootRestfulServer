@@ -32,7 +32,7 @@ public class UserController {
         User user = service.findByEmail(principal.getName());
         if (user.getStatus() == null || user.getStatus().equals(UserStatus.OFFLINE)) {
             user.setStatus(UserStatus.ONLINE);
-            service.save(user);
+            user = service.save(user);
         }
         return DTOService.toUserDTO(user);
     }

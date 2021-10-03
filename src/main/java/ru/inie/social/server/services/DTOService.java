@@ -18,7 +18,7 @@ public class DTOService {
         Set<RelationshipDTO> relationships = new HashSet<>();
 
         if(user.getRelationships() != null)
-            user.getRelationships().forEach(relationship -> relationships.add(toRelationshipDTO(relationship)));
+            user.getRelationships().forEach(relationship -> relationships.add(toRelationshipDTOWithoutUser(relationship)));
 
         return UserDTO.builder()
                 .id(user.getId())
@@ -28,6 +28,15 @@ public class DTOService {
                 .email(user.getEmail())
                 .dateOfBirth(user.getDateOfBirth())
                 .relationships(relationships)
+                .build();
+    }
+
+    public static RelationshipDTO toRelationshipDTOWithoutUser(Relationship relationship) {
+        return RelationshipDTO.builder()
+                .id(relationship.getId())
+                .status(relationship.getStatus())
+                .topic(toTopicDTO(relationship.getTopic()))
+                .updatedBy(relationship.getUpdatedBy())
                 .build();
     }
 
@@ -45,7 +54,7 @@ public class DTOService {
         Set<RelationshipDTO> relationships = new HashSet<>();
 
         if(topic.getRelationships() != null)
-            topic.getRelationships().forEach(relationship -> relationships.add(toRelationshipDTO(relationship)));
+            topic.getRelationships().forEach(relationship -> relationships.add(toRelationshipDTOWithoutTopic(relationship)));
 
         return TopicDTO.builder()
                 .id(topic.getId())
@@ -54,6 +63,15 @@ public class DTOService {
                 .mode(topic.getMode())
                 .relationships(relationships)
                 .updatedBy(topic.getUpdatedBy())
+                .build();
+    }
+
+    private static RelationshipDTO toRelationshipDTOWithoutTopic(Relationship relationship) {
+        return RelationshipDTO.builder()
+                .id(relationship.getId())
+                .status(relationship.getStatus())
+                .user(toUserDTOWithoutRelationships(relationship.getUser()))
+                .updatedBy(relationship.getUpdatedBy())
                 .build();
     }
 

@@ -8,6 +8,7 @@ import ru.inie.social.server.entities.enums.SubscribeStatus;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class RelationshipDTO {
         private Long id;
         private TopicDTO topic;

@@ -45,25 +45,6 @@ public class UserMovesController {
         List<UserDTO> usersDTOs = new ArrayList<>();
         List<User> users = userService.searchUsersBy(searchValue);
 
-        user.getRelationships().forEach(UserRelationship -> {
-            switch (UserRelationship.getTopic().getMode()) {
-                case PRIVATE:
-                    UserRelationship.getTopic().getRelationships().forEach(topicRelationships -> {
-                        User subscriber = topicRelationships.getUser();
-                        if (!Objects.equals(subscriber.getId(), user.getId())) {
-                            if (subscriber.getEmail().startsWith(searchValue) ||
-                                subscriber.getFirstname().startsWith(searchValue) ||
-                                subscriber.getLastname().startsWith(searchValue)) {
-
-                                users.remove(subscriber);
-                            }
-                        }
-                    });
-                    break;
-                case PUBIC:
-            }
-        });
-
         users.remove(user);
 
         users.forEach(user1 -> usersDTOs.add(DTOService.toUserDTOWithoutRelationships(user1)));
@@ -81,37 +62,44 @@ public class UserMovesController {
         Relationship companionRelationship;
 
         List<Relationship> relationships = relationshipsService.getRelationshipByUserAndUserAndTopicStatus(user, companion, TopicMode.PRIVATE);
-        if (relationships != null) {
+        if (relationships != null && !relationships.isEmpty() && relationships.size() > 1) {
             userRelationship = relationships.stream().filter(relationship -> relationship.getUser().equals(user)).findFirst().get();
             companionRelationship = relationships.stream().filter(relationship -> relationship.getUser().equals(companion)).findFirst().get();
             if(userRelationship.getStatus() != SubscribeStatus.SUBSCRIBE){
                 userRelationship.setStatus(SubscribeStatus.SUBSCRIBE);
+                userRelationship.setUpdatedBy(new Date().getTime());
             }
-            if(companionRelationship.getStatus() == null)
+            if(companionRelationship.getStatus() == null) {
                 companionRelationship.setStatus(SubscribeStatus.UNSUBSCRIBE);
+                companionRelationship.setUpdatedBy(new Date().getTime());
+            }
 
             userRelationship = relationshipsService.save(userRelationship);
             relationshipsService.save(companionRelationship);
 
-            return DTOService.toRelationshipDTO(userRelationship);
+            return DTOService.toRelationshipDTOWithoutUser(userRelationship);
         }
 
         Topic topic = new Topic();
         topic.setMode(TopicMode.PRIVATE);
         topic = topicService.create(topic);
 
-
         userRelationship = new Relationship();
         userRelationship.setUser(user);
         userRelationship.setTopic(topic);
+        userRelationship.setUpdatedBy(new Date().getTime());
+        userRelationship.setStatus(SubscribeStatus.SUBSCRIBE);
+
         companionRelationship = new Relationship();
         companionRelationship.setUser(companion);
         companionRelationship.setTopic(topic);
+        companionRelationship.setUpdatedBy(new Date().getTime());
+        companionRelationship.setStatus(SubscribeStatus.UNSUBSCRIBE);
 
         userRelationship = relationshipsService.save(userRelationship);
         relationshipsService.save(companionRelationship);
 
-        return DTOService.toRelationshipDTO(userRelationship);
+        return DTOService.toRelationshipDTOWithoutUser(relationshipsService.getById(userRelationship.getId()));
     }
 
 //    @GetMapping("/user/topics")
@@ -141,14 +129,15 @@ public class UserMovesController {
     }
 
     @GetMapping("/user/id:{userId}/topic:{topicId}/subscribe")
-    public TopicDTO subscribeAtTopic(@PathVariable("topicId") long topicId,
+    public RelationshipDTO subscribeAtTopic(@PathVariable("topicId") long topicId,
                                      @PathVariable("userId") long userId) {
         User user = userService.findById(userId);
-        Topic topic = topicService.findById(topicId);
 
+        Relationship userRelationship = user.getRelationships().stream().filter(relationship -> relationship.getTopic().getId() == topicId).findFirst().get();
+        userRelationship.setStatus(SubscribeStatus.SUBSCRIBE);
 //        topic.getUnsubscribes().remove(user);
 //        topic.getSubscribers().add(user);
 
-        return DTOService.toTopicDTO(topicService.update(topic));
+        return DTOService.toRelationshipDTO(relationshipsService.save(userRelationship));
     }
 }

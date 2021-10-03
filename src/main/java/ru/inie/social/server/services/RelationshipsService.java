@@ -26,4 +26,8 @@ public class RelationshipsService {
     public List<Relationship> getRelationshipByUserAndUserAndTopicStatus(User user, User companion, TopicMode topicMode) {
         return relationshipsRepository.findAllByUserOrCompanionAndTopicMode(user, companion, topicMode);
     }
+
+    public Relationship getById(Long id) {
+        return relationshipsRepository.findById(id).get();
+    }
 }
