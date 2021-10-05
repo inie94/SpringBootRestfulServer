@@ -69,12 +69,7 @@ function onConnected() {
     if (authorizedUser.relationships) {
         authorizedUser.relationships.forEach(relationship => {
             messages[relationship.topic.id] = '';
-//            fetch('/user/topic/id:' + channel.id + '/messages/received/count')
-//                .then(response => response.json())
-//                .then(data => {
-//                    newMessages[channel.id] = data;
-                    viewUserTopics();
-//                });
+            newMessages[relationship.topic.id] = 0;
             subscribeOnTopic(relationship.topic.id);
             fetch('/user/topic/id:'+ relationship.topic.id + '/messages')
                 .then(response => response.json())
@@ -82,7 +77,11 @@ function onConnected() {
                     data.forEach(message => {
                         chekOnNewDate(relationship.topic.id, message.createdBy);
                         messages[relationship.topic.id] += createMessageContainer(message);
+                        if (authorizedUser.id !== message.sender.id && relationship.updatedBy < message.createdBy){
+                            newMessages[relationship.topic.id]++;
+                        }
                     });
+                    viewUserTopics();
                 });
         });
     }
@@ -269,8 +268,10 @@ function preparingToConnect(someRelationship) {
 }
 
 function choseTopic(topicId) {
+    newMessages[topicId] = 0;
     clearSearchInput();
     chat.classList.remove('invisible');
+
     currentTopic = authorizedUser.relationships.filter(relationship => relationship.topic.id === topicId)[0].topic;
 
     var companion = currentTopic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].user;
@@ -284,7 +285,15 @@ function choseTopic(topicId) {
 /*
     Добавить обновление времени отношения
 */
-//    fetch('/user/topic/id:' + topicId + '/messages/received');
+    fetch('/user/topic/id:' + topicId + '/messages/received')
+        .then(response => response.json())
+        .then(data => {
+            authorizedUser.relationships.forEach(relationship => {
+                if(relationship.id === data.id) {
+                    relationship = data;
+                }
+            })
+        });
     newMessages[topicId] = 0;
 
     reloadChatBody(currentTopic.id);
@@ -333,7 +342,7 @@ function sendMessage(event) {
         stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
         messageInput.value = '';
 
-        if (currentTopic.status == 'PRIVATE') {
+        if (currentTopic.mode == 'PRIVATE') {
             if(currentTopic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].status === 'UNSUBSCRIBE'){
                 sendNotification(currentTopic, currentTopic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].user);
             }
@@ -378,7 +387,7 @@ function onMessageReceived(payload) {
         messages[message.topic.id] += createMessageContainer(message);
         authorizedUser.relationships.filter(relationship => relationship.topic.id === message.topic.id)[0].topic.updatedBy = message.topic.updatedBy;
         viewUserTopics();
-        if (currentTopic === null || (currentTopic.id !== message.topic.id)) {
+        if (!currentTopic || (currentTopic.id !== message.topic.id)) {
             newMessages[message.topic.id]++;
             document.querySelector('#span-container-user-' + message.sender.id).classList.remove('invisible');
             if (newMessages[message.topic.id] > 99) {
@@ -437,7 +446,7 @@ function search(text) {
 function searchIntoUserTopics(text) {
     var element = ''
     authorizedUser.channels.forEach(topic => {
-        if (topic.status === 'PRIVATE') {
+        if (topic.mode === 'PRIVATE') {
             var companion = topic.subscribers.filter(isNotAuthorisedUser)[0];
             if (companion != null && (companion.email.startsWith(text) ||
                 companion.firstname.startsWith(text)  ||

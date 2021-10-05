@@ -97,9 +97,11 @@ public class UserMovesController {
         companionRelationship.setStatus(SubscribeStatus.UNSUBSCRIBE);
 
         userRelationship = relationshipsService.save(userRelationship);
-        relationshipsService.save(companionRelationship);
+        companionRelationship = relationshipsService.save(companionRelationship);
 
-        return DTOService.toRelationshipDTOWithoutUser(relationshipsService.getById(userRelationship.getId()));
+        topic.setRelationships(new HashSet<>(Arrays.asList(userRelationship, companionRelationship)));
+
+        return DTOService.toRelationshipDTOWithoutUser(userRelationship);
     }
 
 //    @GetMapping("/user/topics")
