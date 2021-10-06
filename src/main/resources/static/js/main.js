@@ -105,11 +105,12 @@ function viewUserTopics() {
     });
     chatsListViews = element;
     chatsList.innerHTML = chatsListViews;
+    addEventListenerToChatButtons();
 }
 
 function generateTopicCard(topic) {
     var companion = topic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].user;
-    var element = '<button onclick="choseTopic(' + topic.id + ')" id="container-user-' + companion.id + '" type="button" class="btn btn-dark p-3 container-fluid position-relative">' +
+    var element = '<button onclick="choseTopic(' + topic.id + ')" id="container-user-' + companion.id + '" type="button" class="btn btn-dark p-3 container-fluid position-relative chat-button">' +
                    '<div class="row align-items-center">' +
                        '<div class="col-3 p-0 d-flex justify-content-center">' +
                            '<div class="col-">';

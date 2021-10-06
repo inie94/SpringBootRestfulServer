@@ -18,4 +18,6 @@ public interface RelationshipsRepository extends JpaRepository<Relationship, Lon
             "WHERE t.mode = ?3 AND (r.user = ?1 OR r.user = ?2) " +
             "AND r.topic IN (SELECT topic FROM Relationship GROUP BY topic HAVING COUNT(topic) > 1)")
     List<Relationship> findAllByUserOrCompanionAndTopicMode(User user, User companion, TopicMode mode);
+
+
 }

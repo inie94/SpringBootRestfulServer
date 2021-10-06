@@ -37,267 +37,37 @@
             </div>
         </div>
         <div id="chats-list" class="card-body overflow-auto p-0" >
-
-            <div class="container-fluid">
-                <div class="row">
-                    <button type="button" class="col-1 p-0  btn btn-dark ">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                        </svg>
-                    </button>
-                    <button onclick="preparingToConnect(' + topic.id + ')" type="button" class="col btn btn-dark p-3 position-relative">
-                        <div class="row align-items-center col">
-                            <div class="col-3 p-0 d-flex justify-content-center">
-                                <div class="col-">
-                                    <span id="user-12" class="position-absolute p-2 bg-success border border-light rounded-circle"></span>
-                                </div>
-                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                class="img-fluid rounded-circle border border-light"
-                                alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                style="width: 60px; height: 60px;">
+            <button onclick="getTopicFromUserID(' + user.id + ')" type="button" class="btn btn-dark p-3 container-fluid chat-button">
+                <div class="row align-items-center">
+                    <div class="col-3 p-0 d-flex justify-content-center">
+                        <div class="col-">
+                            <span id="user-user.id" class="position-absolute p-2 bg-success border border-light rounded-circle invisible"></span>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
+                        class="img-fluid rounded-circle border border-light"
+                        alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
+                        style="width: 60px; height: 60px;">
+                    </div>
+                    <div class="col-9 text-light">
+                        <h6 align="left" class="card-title text-white">
+                            user.firstname  user.lastname
+                        </h6>
+                        <div class="row">
+                            <div class="col-9">
+                                <p align="left" class="card-text text-white text-muted text-truncate">
+                                    user.email
+                                </p>
                             </div>
-                            <div class="col-9 text-light">
-                                <div class="row">
-                                    <h6 align="left" class="card-title text-white">user.firstname user.lastname</h6>
-                                    <p align="left" class="card-text text-white text-muted text-truncate">uasdasdasdasdadser.email</p>
-                                </div>
+                            <div class="col-3 invisible" id="span-container-user-user.id">
+                                <span class="badge rounded-pill bg-danger" id="span-context-user-user.id">
+                                    99+
+                                    <span class="visually-hidden">unread messages</span>
+                                </span>
                             </div>
                         </div>
-                        <span class="position-absolute m-2 end-0  badge rounded-pill bg-danger">
-                            99+
-                        </span>
-
-                    </button>
+                    </div>
                 </div>
-            </div>
-            <div class="container-fluid">
-                <div class="row">
-                    <button type="button" class="col-1 p-0  btn btn-dark ">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                        </svg>
-                    </button>
-                    <button onclick="preparingToConnect(' + topic.id + ')" type="button" class="col btn btn-dark p-3 position-relative">
-                        <div class="row align-items-center col">
-                            <div class="col-3 p-0 d-flex justify-content-center">
-                                <div class="col-">
-                                    <span id="user-12" class="position-absolute p-2 bg-success border border-light rounded-circle"></span>
-                                </div>
-                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     class="img-fluid rounded-circle border border-light"
-                                     alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     style="width: 60px; height: 60px;">
-                            </div>
-                            <div class="col-9 text-light">
-                                <div class="row">
-                                    <h6 align="left" class="card-title text-white">user.firstname user.lastname</h6>
-                                    <p align="left" class="card-text text-white text-muted text-truncate">uasdasdasdasdadser.email</p>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="position-absolute m-2 end-0  badge rounded-pill bg-danger">
-                            99+
-                        </span>
-
-                    </button>
-                </div>
-            </div>
-            <div class="container-fluid">
-                <div class="row">
-                    <button type="button" class="col-1 p-0  btn btn-dark ">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                        </svg>
-                    </button>
-                    <button onclick="preparingToConnect(' + topic.id + ')" type="button" class="col btn btn-dark p-3 position-relative">
-                        <div class="row align-items-center col">
-                            <div class="col-3 p-0 d-flex justify-content-center">
-                                <div class="col-">
-                                    <span id="user-12" class="position-absolute p-2 bg-success border border-light rounded-circle"></span>
-                                </div>
-                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     class="img-fluid rounded-circle border border-light"
-                                     alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     style="width: 60px; height: 60px;">
-                            </div>
-                            <div class="col-9 text-light">
-                                <div class="row">
-                                    <h6 align="left" class="card-title text-white">user.firstname user.lastname</h6>
-                                    <p align="left" class="card-text text-white text-muted text-truncate">uasdasdasdasdadser.email</p>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="position-absolute m-2 end-0  badge rounded-pill bg-danger">
-                            99+
-                        </span>
-
-                    </button>
-                </div>
-            </div>
-            <div class="container-fluid">
-                <div class="row">
-                    <button type="button" class="col-1 p-0  btn btn-dark ">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                        </svg>
-                    </button>
-                    <button onclick="preparingToConnect(' + topic.id + ')" type="button" class="col btn btn-dark p-3 position-relative">
-                        <div class="row align-items-center col">
-                            <div class="col-3 p-0 d-flex justify-content-center">
-                                <div class="col-">
-                                    <span id="user-12" class="position-absolute p-2 bg-success border border-light rounded-circle"></span>
-                                </div>
-                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     class="img-fluid rounded-circle border border-light"
-                                     alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     style="width: 60px; height: 60px;">
-                            </div>
-                            <div class="col-9 text-light">
-                                <div class="row">
-                                    <h6 align="left" class="card-title text-white">user.firstname user.lastname</h6>
-                                    <p align="left" class="card-text text-white text-muted text-truncate">uasdasdasdasdadser.email</p>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="position-absolute m-2 end-0  badge rounded-pill bg-danger">
-                            99+
-                        </span>
-
-                    </button>
-                </div>
-            </div>
-            <div class="container-fluid">
-                <div class="row">
-                    <button type="button" class="col-1 p-0  btn btn-dark ">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                        </svg>
-                    </button>
-                    <button onclick="preparingToConnect(' + topic.id + ')" type="button" class="col btn btn-dark p-3 position-relative">
-                        <div class="row align-items-center col">
-                            <div class="col-3 p-0 d-flex justify-content-center">
-                                <div class="col-">
-                                    <span id="user-12" class="position-absolute p-2 bg-success border border-light rounded-circle"></span>
-                                </div>
-                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     class="img-fluid rounded-circle border border-light"
-                                     alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     style="width: 60px; height: 60px;">
-                            </div>
-                            <div class="col-9 text-light">
-                                <div class="row">
-                                    <h6 align="left" class="card-title text-white">user.firstname user.lastname</h6>
-                                    <p align="left" class="card-text text-white text-muted text-truncate">uasdasdasdasdadser.email</p>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="position-absolute m-2 end-0  badge rounded-pill bg-danger">
-                            99+
-                        </span>
-
-                    </button>
-                </div>
-            </div>
-            <div class="container-fluid">
-                <div class="row">
-                    <button type="button" class="col-1 p-0  btn btn-dark ">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                        </svg>
-                    </button>
-                    <button onclick="preparingToConnect(' + topic.id + ')" type="button" class="col btn btn-dark p-3 position-relative">
-                        <div class="row align-items-center col">
-                            <div class="col-3 p-0 d-flex justify-content-center">
-                                <div class="col-">
-                                    <span id="user-12" class="position-absolute p-2 bg-success border border-light rounded-circle"></span>
-                                </div>
-                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     class="img-fluid rounded-circle border border-light"
-                                     alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     style="width: 60px; height: 60px;">
-                            </div>
-                            <div class="col-9 text-light">
-                                <div class="row">
-                                    <h6 align="left" class="card-title text-white">user.firstname user.lastname</h6>
-                                    <p align="left" class="card-text text-white text-muted text-truncate">uasdasdasdasdadser.email</p>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="position-absolute m-2 end-0  badge rounded-pill bg-danger">
-                            99+
-                        </span>
-
-                    </button>
-                </div>
-            </div>
-            <div class="container-fluid">
-                <div class="row">
-                    <button type="button" class="col-1 p-0  btn btn-dark ">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                        </svg>
-                    </button>
-                    <button onclick="preparingToConnect(' + topic.id + ')" type="button" class="col btn btn-dark p-3 position-relative">
-                        <div class="row align-items-center col">
-                            <div class="col-3 p-0 d-flex justify-content-center">
-                                <div class="col-">
-                                    <span id="user-12" class="position-absolute p-2 bg-success border border-light rounded-circle"></span>
-                                </div>
-                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     class="img-fluid rounded-circle border border-light"
-                                     alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     style="width: 60px; height: 60px;">
-                            </div>
-                            <div class="col-9 text-light">
-                                <div class="row">
-                                    <h6 align="left" class="card-title text-white">user.firstname user.lastname</h6>
-                                    <p align="left" class="card-text text-white text-muted text-truncate">uasdasdasdasdadser.email</p>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="position-absolute m-2 end-0  badge rounded-pill bg-danger">
-                            99+
-                        </span>
-
-                    </button>
-                </div>
-            </div>
-            <div class="container-fluid">
-                <div class="row">
-                    <button type="button" class="col-1 p-0  btn btn-dark ">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                        </svg>
-                    </button>
-                    <button onclick="preparingToConnect(' + topic.id + ')" type="button" class="col btn btn-dark p-3 position-relative">
-                        <div class="row align-items-center col">
-                            <div class="col-3 p-0 d-flex justify-content-center">
-                                <div class="col-">
-                                    <span id="user-12" class="position-absolute p-2 bg-success border border-light rounded-circle"></span>
-                                </div>
-                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     class="img-fluid rounded-circle border border-light"
-                                     alt="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cG9ydHJhaXR8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80"
-                                     style="width: 60px; height: 60px;">
-                            </div>
-                            <div class="col-9 text-light">
-                                <div class="row">
-                                    <h6 align="left" class="card-title text-white">user.firstname user.lastname</h6>
-                                    <p align="left" class="card-text text-white text-muted text-truncate">uasdasdasdasdadser.email</p>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="position-absolute m-2 end-0  badge rounded-pill bg-danger">
-                            99+
-                        </span>
-
-                    </button>
-                </div>
-            </div>
-
-
-
-
+            </button>
 
         </div>
     </div>
@@ -364,5 +134,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script src="/js/main.js"></script>
+<script src="/js/contextmenu.js"></script>
 </body>
 </html>

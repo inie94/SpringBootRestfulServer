@@ -104,30 +104,18 @@ public class UserMovesController {
         return DTOService.toRelationshipDTOWithoutUser(userRelationship);
     }
 
-//    @GetMapping("/user/topics")
-//    public Set<Topic> getAllUserTopics(Principal principal) {
-//        User user = userService.findByEmail(principal.getName());
-//        return topicService.getTopicsBySubscriber(user);
-//    }
-
     @GetMapping("/user/topic:{id}")
     public Topic getTopic(@PathVariable("id") long id) {
         return topicService.findById(id);
     }
 
     @GetMapping("/user/topic:{id}/unsubscribe")
-    public void unsubscribeAtTopic(@PathVariable("id") long id, Principal principal) {
+    public RelationshipDTO unsubscribeAtTopic(@PathVariable("id") long id, Principal principal) {
         User user = userService.findByEmail(principal.getName());
         Topic topic = topicService.findById(id);
-
-//        topic.getSubscribers().remove(user);
-////        topic.getUnsubscribes().add(user);
-//
-//        if (topic.getSubscribers().isEmpty()) {
-//            // mb delete topic
-//        }
-
-        topicService.update(topic);
+        Relationship userRelationship = user.getRelationships().stream().filter(relationship -> relationship.getTopic().equals(topic)).findFirst().get();
+        userRelationship = relationshipsService.save(userRelationship);
+        return DTOService.toRelationshipDTOWithoutUser(userRelationship);
     }
 
     @GetMapping("/user/id:{userId}/topic:{topicId}/subscribe")
