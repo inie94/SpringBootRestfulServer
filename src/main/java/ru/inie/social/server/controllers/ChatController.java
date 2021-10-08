@@ -11,6 +11,8 @@ import ru.inie.social.server.dto.MessageDTO;
 import ru.inie.social.server.entities.Message;
 import ru.inie.social.server.services.MessagesService;
 
+import java.util.Date;
+
 @Controller
 public class ChatController {
 
@@ -25,6 +27,7 @@ public class ChatController {
 
     @MessageMapping("/chat.sendMessage")
     public MessageDTO sendMessage(@Payload MessageDTO message) {
+        message.setCreatedBy(new Date().getTime());
         service.save(message);
         messagingTemplate.convertAndSend("/topic/id:" + message.getTopic().getId(), message);
         return message;

@@ -72,12 +72,10 @@ public class UserMovesController {
             if(companionRelationship.getStatus() == null) {
                 companionRelationship.setStatus(SubscribeStatus.UNSUBSCRIBE);
                 companionRelationship.setUpdatedBy(new Date().getTime());
+                relationshipsService.save(companionRelationship);
             }
 
-            userRelationship = relationshipsService.save(userRelationship);
-            relationshipsService.save(companionRelationship);
-
-            return DTOService.toRelationshipDTOWithoutUser(userRelationship);
+            return DTOService.toRelationshipDTOWithoutUser(relationshipsService.save(userRelationship));
         }
 
         Topic topic = new Topic();
@@ -114,6 +112,8 @@ public class UserMovesController {
         User user = userService.findByEmail(principal.getName());
         Topic topic = topicService.findById(id);
         Relationship userRelationship = user.getRelationships().stream().filter(relationship -> relationship.getTopic().equals(topic)).findFirst().get();
+        userRelationship.setStatus(SubscribeStatus.UNSUBSCRIBE);
+        userRelationship.setUpdatedBy(new Date().getTime());
         userRelationship = relationshipsService.save(userRelationship);
         return DTOService.toRelationshipDTOWithoutUser(userRelationship);
     }
@@ -125,9 +125,8 @@ public class UserMovesController {
 
         Relationship userRelationship = user.getRelationships().stream().filter(relationship -> relationship.getTopic().getId() == topicId).findFirst().get();
         userRelationship.setStatus(SubscribeStatus.SUBSCRIBE);
-//        topic.getUnsubscribes().remove(user);
-//        topic.getSubscribers().add(user);
+        userRelationship.setUpdatedBy(new Date().getTime());
 
-        return DTOService.toRelationshipDTO(relationshipsService.save(userRelationship));
+        return DTOService.toRelationshipDTOWithoutUser(relationshipsService.save(userRelationship));
     }
 }

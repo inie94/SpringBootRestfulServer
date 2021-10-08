@@ -75,15 +75,23 @@ function onConnected() {
                 .then(response => response.json())
                 .then(data => {
                     data.forEach(message => {
-                        chekOnNewDate(relationship.topic.id, message.createdBy);
-                        messages[relationship.topic.id] += createMessageContainer(message);
-                        if (authorizedUser.id !== message.sender.id && relationship.updatedBy < message.createdBy){
-                            newMessages[relationship.topic.id]++;
-                        }
+                        getMessage(relationship, message);
                     });
                     viewUserTopics();
                 });
         });
+    }
+}
+
+function getMessage(relationship, message) {
+    chekOnNewDate(relationship.topic.id, message.createdBy);
+    messages[relationship.topic.id] += createMessageContainer(message);
+    if (authorizedUser.id !== message.sender.id && relationship.updatedBy < message.createdBy){
+        if (newMessages[message.topic.id] == 99) {
+            newMessages[message.topic.id] = '99+';
+        } else {
+            newMessages[message.topic.id]++;
+        }
     }
 }
 
@@ -105,7 +113,6 @@ function viewUserTopics() {
     });
     chatsListViews = element;
     chatsList.innerHTML = chatsListViews;
-    addEventListenerToChatButtons();
 }
 
 function generateTopicCard(topic) {
@@ -252,24 +259,24 @@ function preparingToConnect(someRelationship) {
     if (authorizedUser.relationships.filter(relationship => relationship.id == someRelationship.id)[0] == null) {
         authorizedUser.relationships.push(someRelationship);
     } else {
-        authorizedUser.relationships.filter(relationship => relationship.id == someRelationship.id)[0] = someRelationship;
+        var item = authorizedUser.relationships.filter(relationship => relationship.id == someRelationship.id)[0];
+        var index = authorizedUser.relationships.indexOf(item);
+        authorizedUser.relationships[index] = someRelationship;
     }
     messages[someRelationship.topic.id] = '';
     newMessages[someRelationship.topic.id] = 0;
+    subscribeOnTopic(someRelationship.topic.id);
     fetch('/user/topic/id:'+ someRelationship.topic.id + '/messages')
         .then(response => response.json())
         .then(data => {
             data.forEach(message => {
-                chekOnNewDate(someRelationship.topic.id, message.createdBy);
-                messages[someRelationship.topic.id] += createMessageContainer(message);
+                getMessage(someRelationship, message);
             });
+            viewUserTopics();
         });
-    subscribeOnTopic(someRelationship.topic.id);
-    viewUserTopics();
 }
 
 function choseTopic(topicId) {
-    newMessages[topicId] = 0;
     clearSearchInput();
     chat.classList.remove('invisible');
 
@@ -283,9 +290,7 @@ function choseTopic(topicId) {
     }
 
     chatHeader.innerHTML = companion.firstname + ' ' + companion.lastname;
-/*
-    Добавить обновление времени отношения
-*/
+
     fetch('/user/topic/id:' + topicId + '/messages/received')
         .then(response => response.json())
         .then(data => {
@@ -294,11 +299,12 @@ function choseTopic(topicId) {
                     relationship = data;
                 }
             })
+            newMessages[topicId] = 0;
+            reloadChatBody(topicId);
         });
-    newMessages[topicId] = 0;
 
-    reloadChatBody(currentTopic.id);
 }
+
 function clearSearchInput() {
     searchInput.value = '';
     searchInput.blur();
@@ -306,25 +312,41 @@ function clearSearchInput() {
 }
 
 function subscribeOnTopic(topicId) {
-    // Subscribe to the Topic
-    stompClient.subscribe(('/topic/id:' + topicId), onMessageReceived);
-    // Add subscribe on topic to subscriptions
-    subscriptions[topicId] = true;
+    // Subscribe to the Topic and add to subscriptions
+    subscriptions[topicId] = stompClient.subscribe(('/topic/id:' + topicId), onMessageReceived);
 }
+
+//function sendSubscribeMessage() {
+//    if(stompClient) {
+//        var subscribeMessage = {
+//            topic: currentTopic,
+//            sender: authorizedUser,
+//            content: messageInput.value,
+//            type: 'CHAT',
+//            createdBy: Date.now()
+//        };
+//        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(subscribeMessage));
+//        messageInput.value = '';
+//    }
+//}
 
 function onError(error) {
     connectingElement.innerHTML = 'Could not connect to WebSocket server. Please refresh this page to try again!';
 //    connectingElement.style.color = 'red';
 }
 
-function sendNotification(topic, user) {
+function sendNotification(recipient, recipientRelationship) {
     stompClient.send("/app/chat.notification",
         {},
         JSON.stringify({
             type: 'AWAIT_CONNECTION',
-            topic: topic,
+            topic: recipientRelationship.topic,
             sender: authorizedUser,
-            content: JSON.stringify(user)
+            content:
+                JSON.stringify({
+                    relationship: recipientRelationship,
+                    user: recipient
+                })
         })
     );
 }
@@ -332,52 +354,64 @@ function sendNotification(topic, user) {
 function sendMessage(event) {
     var messageContent = messageInput.value.trim();
     if(messageContent && stompClient) {
-
         var chatMessage = {
             topic: currentTopic,
             sender: authorizedUser,
             content: messageInput.value,
-            type: 'CHAT',
-            createdBy: Date.now()
+            type: 'CHAT'
         };
-        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
-        messageInput.value = '';
-
         if (currentTopic.mode == 'PRIVATE') {
-            if(currentTopic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].status === 'UNSUBSCRIBE'){
-                sendNotification(currentTopic, currentTopic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].user);
+            var relationship = currentTopic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0];
+            if(relationship.status === 'UNSUBSCRIBE'){
+                var recipient = relationship.user;
+                fetch('/user/id:' + recipient.id + '/topic:' + currentTopic.id + '/subscribe')
+                    .then(response => response.json())
+                    .then(data => {
+                        sendNotification(recipient, data);
+                        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                    });
+            } else {
+                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
             }
         } else {
-
+            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
         }
+
+        messageInput.value = '';
+
+
     }
     event.preventDefault();
 }
+
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
     if(message.type === 'AWAIT_CONNECTION') {
-        var recipient = JSON.parse(message.content);
+        var awaitConnectionMessageContent = JSON.parse(message.content);
+        var recipient = awaitConnectionMessageContent.user;
         if (recipient.id === authorizedUser.id) {
-            fetch('/user/id:' + recipient.id + '/topic:' + message.topic.id + '/subscribe')
-                .then(response => response.json())
-                .then(data => {
-                    if(authorizedUser.relationships.filter(relationship => relationship.topic.id === message.topic.id)[0] != null) {
-                        authorizedUser.relationships.filter(relationship => relationship.topic.id === message.topic.id)[0] = data;
-                    } else {
-                        authorizedUser.relationships.push(data);
-                    }
-                    messages[data.topic.id] = '';
-                    subscribeOnTopic(data.topic.id);
-                    viewUserTopics();
-            });
-            fetch('/user/topic/id:'+ message.topic.id + '/messages')
-                .then(response => response.json())
-                .then(data => {
-                    data.forEach(message => {
-                        chekOnNewDate(message.topic.id, message.createdBy);
-                        messages[message.topic.id] += createMessageContainer(message);
-                    });
-                });
+            var rlsp = awaitConnectionMessageContent.relationship;
+            if(authorizedUser.relationships.filter(relationship => relationship.topic.id === rlsp.topic.id)[0] != null) {
+                var item = authorizedUser.relationships.filter(relationship => relationship.topic.id === rlsp.topic.id)[0];
+                var index = authorizedUser.relationships.indexOf(item);
+                authorizedUser.relationships[index] = rlsp;
+            } else {
+                authorizedUser.relationships.push(rlsp);
+            }
+            messages[rlsp.topic.id] = '';
+            if (!newMessages[rlsp.topic.id]) {
+                newMessages[rlsp.topic.id] = 0;
+            }
+            subscribeOnTopic(rlsp.topic.id);
+            fetch('/user/topic/id:'+ rlsp.topic.id + '/messages')
+               .then(response => response.json())
+               .then(data => {
+                   data.forEach(message => {
+                       getMessage(rlsp, message);
+                   });
+                   viewUserTopics();
+               });
+
         } else if (message.sender.id === authorizedUser.id && recipient.status === 'OFFLINE') {
             fetch('/user/id:' + recipient.id + '/topic:' + message.topic.id + '/subscribe')
                 .then(response => response.json())
@@ -387,23 +421,19 @@ function onMessageReceived(payload) {
         chekOnNewDate(message.topic.id, message.createdBy);
         messages[message.topic.id] += createMessageContainer(message);
         authorizedUser.relationships.filter(relationship => relationship.topic.id === message.topic.id)[0].topic.updatedBy = message.topic.updatedBy;
-        viewUserTopics();
         if (!currentTopic || (currentTopic.id !== message.topic.id)) {
-            newMessages[message.topic.id]++;
-            document.querySelector('#span-container-user-' + message.sender.id).classList.remove('invisible');
-            if (newMessages[message.topic.id] > 99) {
+            if (newMessages[message.topic.id] == 99) {
                 newMessages[message.topic.id] = '99+';
+            } else {
+                newMessages[message.topic.id]++;
             }
-            document.querySelector('#span-context-user-' + message.sender.id).innerHTML = newMessages[message.topic.id];
-//            var element = document.querySelector('#container-user-' + message.sender.id);
-//            element.outerHTML = '';
-//            chatsList.innerHTML = element.outerHTML + chatsList.innerHTML;
         } else {
             reloadChatBody(message.topic.id);
         }
+        viewUserTopics();
     } else {
         authorizedUser.relationships.forEach(relationship => {
-            if (relationship.topic.mode === 'PRIVATE') {
+            if (relationship.topic.mode === 'PRIVATE' && relationship.status === 'SUBSCRIBE') {
                 var companion = relationship.topic.relationships.filter(relationship => isNotAuthorisedUser(relationship.user))[0].user;
                 if (companion != null && companion.id === message.sender.id) {
                     if(message.type === 'JOIN') {
@@ -443,7 +473,7 @@ function search(text) {
             });
     }
 }
-
+/* deprecated */
 function searchIntoUserTopics(text) {
     var element = ''
     authorizedUser.channels.forEach(topic => {
@@ -492,10 +522,37 @@ function logout(event) {
     });
 }
 
+function unsubscribeAtCurrentTopic() {
+    fetch('/user/topic:' + currentTopic.id + '/unsubscribe')
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            var item = authorizedUser.relationships.filter(relationship => relationship.id == data.id)[0];
+            var index = authorizedUser.relationships.indexOf(item);
+            authorizedUser.relationships[index] = data;
+            subscriptions[currentTopic.id].unsubscribe();
+//            sendUnsubscribeMessage(currentTopic);
+            currentTopic = null;
+            messages[data.topic.id] = '';
+            newMessages[data.topic.id] = 0;
+            chat.classList.add('invisible');
+            viewUserTopics();
+        });
+}
+
+function sendUnsubscribeMessage(topic) {
+    if(stompClient) {
+        var unsubscribeMessage = {
+            topic: topic,
+            sender: authorizedUser,
+            type: 'UNSUBSCRIBE',
+            createdBy: Date.now()
+        };
+        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(unsubscribeMessage));
+    }
+}
 
 initialization.call();
-
-
 
 searchInput.onkeydown = function(event) {
             if (event.keyCode == 27 || event.key == 27) {
