@@ -1,6 +1,7 @@
 package ru.inie.social.server.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.inie.social.server.dto.MessageDTO;
@@ -9,8 +10,8 @@ import ru.inie.social.server.entities.Topic;
 import ru.inie.social.server.entities.User;
 import ru.inie.social.server.repositories.MessagesRepository;
 
-import java.lang.reflect.Array;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -39,8 +40,9 @@ public class MessagesService {
     }
 
     public List<Message> getLastMessages(Topic topic) {
-        Long moment = new Date().getTime();
-        return repository.findByTopicAndCreatedByAfterOrderByCreatedByAsc(topic, moment - (2 * 24 * 60 * 60 * 1000));
+        return repository.findFirst20ByTopicOrderByCreatedByDesc(topic).stream()
+                .sorted(Comparator.comparingLong(Message::getCreatedBy))
+                .collect(Collectors.toList());
     }
 
     public Message toMessage(MessageDTO dto) {

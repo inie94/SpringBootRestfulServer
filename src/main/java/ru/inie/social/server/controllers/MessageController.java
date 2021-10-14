@@ -54,20 +54,4 @@ public class MessageController {
 
         return DTOService.toRelationshipDTOWithoutUser(relationshipsService.save(userRelationship));
     }
-
-//    @GetMapping("/user/topic/id:{id}/messages/received/count")
-//    public int countAllNewMessagesFromTopicReceivedByUser(@PathVariable("id") long id,
-//                                                            Principal principal) {
-//        User user = userService.findByEmail(principal.getName());
-//        Topic topic = topicService.findById(id);
-//
-//        Set<Message> messages = messagesService.getAllMessagesByTopicAndSenderNot(topic, user);
-//        Iterator<Message> messageIterator = messages.iterator();
-//        while(messageIterator.hasNext()) {
-//            if (messageIterator.next().getReceived().contains(user)) {
-//                messageIterator.remove();
-//            }
-//        }
-//        return messages.size();
-//    }
 }

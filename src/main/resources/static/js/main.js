@@ -428,6 +428,14 @@ function onMessageReceived(payload) {
                 newMessages[message.topic.id]++;
             }
         } else {
+            fetch('/user/topic/id:' + message.topic.id + '/messages/received')
+                .then(response => response.json())
+                .then(data => {
+                    var item = authorizedUser.relationships.filter(relationship => relationship.id === data.id)[0];
+                    var index = authorizedUser.relationships.indexOf(item);
+                    authorizedUser.relationships[index] = data;
+//                    viewUserTopics();
+                });
             reloadChatBody(message.topic.id);
         }
         viewUserTopics();
