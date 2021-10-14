@@ -90,6 +90,11 @@ public class UserService {
     }
 
     public List<User> searchUsersBy(String searchValue) {
+        /**
+         * Переписать метод,
+         * создать в репозитории метод с @Query,
+         * где происходит запрос по содержанию в полях искомого значения (а не начинаться с него)
+         */
         Set<User> userSet = new HashSet<>();
         userSet.addAll(repository.findAllByEmailStartsWithIgnoreCase(searchValue));
         userSet.addAll(repository.findAllByFirstnameStartsWithIgnoreCase(searchValue));
