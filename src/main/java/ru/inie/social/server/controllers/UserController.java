@@ -37,7 +37,7 @@ public class UserController {
         return DTOService.toUserDTO(user);
     }
     @PostMapping("/user/edit-profile")
-    public void editUser(Principal principal,
+    public UserDTO editUser(Principal principal,
                          @RequestBody UserDTO representation) {
 
         System.out.println(representation);
@@ -55,7 +55,8 @@ public class UserController {
          *  и изменить форму регистрации
          */
 
-        service.update(representation, service.findByEmail(principal.getName()));
+        User user = service.update(representation, service.findByEmail(principal.getName()));
+        return DTOService.toUserDTO(user);
     }
 
 
