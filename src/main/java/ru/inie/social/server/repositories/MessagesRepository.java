@@ -10,7 +10,6 @@ import ru.inie.social.server.entities.Topic;
 import ru.inie.social.server.entities.User;
 
 import java.util.List;
-import java.util.Set;
 
 @Repository
 public interface MessagesRepository extends JpaRepository<Message, Long> {

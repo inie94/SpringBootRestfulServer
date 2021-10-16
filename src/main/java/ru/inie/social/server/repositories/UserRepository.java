@@ -1,6 +1,8 @@
 package ru.inie.social.server.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.inie.social.server.entities.User;
 
@@ -14,10 +16,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findById(Long id);
 
-    List<User> findAllByEmailStartsWithIgnoreCase(String searchValue);
-    List<User> findAllByFirstnameStartsWithIgnoreCase(String searchValue);
-    List<User> findAllByLastnameStartsWithIgnoreCase(String searchValue);
-
-//    List<User> findAllByEmailOrFirstnameOrLastnameIsStartingWith(String searchValue);
+    //SELECT * FROM users WHERE LOWER(email) LIKE LOWER('%n%') OR LOWER(first_name) LIKE LOWER('%n%') OR LOWER(last_name) LIKE LOWER('%n%');
+    @Query("SELECT u FROM User u " +
+            "WHERE LOWER(u.email) LIKE LOWER(CONCAT('%', :value, '%')) OR " +
+                  "LOWER(u.firstname) LIKE LOWER(CONCAT('%', :value, '%')) OR " +
+                  "LOWER(u.lastname) LIKE LOWER(CONCAT('%', :value, '%'))")
+    List<User> findAllByEmailOrFirstnameOrLastnameContainsIgnoreCase(@Param("value") String value);
 
 }

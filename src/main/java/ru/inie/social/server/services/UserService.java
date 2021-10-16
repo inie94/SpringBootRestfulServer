@@ -26,6 +26,9 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /*
+        Необходимо исправить форму регистрации чтобы она возвращала экземпляр класса UserDTO
+     */
     public void create(UserRepresentation userRepresentation) {
         User user = new User();
         user.setFirstname(userRepresentation.getFirstname());
@@ -72,16 +75,13 @@ public class UserService {
         }
         if ((text = representation.getEmail()) != null) {
             user.setEmail(text);
-
         }
         if ((text = representation.getGender()) != null) {
             user.setGender(text);
         }
-
         if (representation.getDateOfBirth() != null) {
             user.setDateOfBirth(representation.getDateOfBirth());
         }
-
         if ((text = representation.getPassword()) != null) {
             user.setPassword(passwordEncoder.encode(text));
         }
@@ -89,17 +89,13 @@ public class UserService {
         repository.save(user);
     }
 
-    public List<User> searchUsersBy(String searchValue) {
-        /**
-         * Переписать метод,
-         * создать в репозитории метод с @Query,
-         * где происходит запрос по содержанию в полях искомого значения (а не начинаться с него)
-         */
-        Set<User> userSet = new HashSet<>();
-        userSet.addAll(repository.findAllByEmailStartsWithIgnoreCase(searchValue));
-        userSet.addAll(repository.findAllByFirstnameStartsWithIgnoreCase(searchValue));
-        userSet.addAll(repository.findAllByLastnameStartsWithIgnoreCase(searchValue));
-        return new ArrayList<>(userSet);
+    /**
+     *
+     * @param value is searching string
+     * @return List of all users who contains value into email or firstname or lastname
+     */
+    public List<User> searchUsersBy(String value) {
+        return new ArrayList<>(repository.findAllByEmailOrFirstnameOrLastnameContainsIgnoreCase(value));
     }
 
 }
